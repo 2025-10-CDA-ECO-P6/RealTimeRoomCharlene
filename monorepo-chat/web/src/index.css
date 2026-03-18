@@ -1,1 +1,170 @@
-/* style global */
+/* =========================================
+   GLOBAL
+========================================= */
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #F3F4F6;
+  font-family: Arial, sans-serif;
+  color: #1F2937;
+}
+
+/* =========================================
+   PAGE : Rejoindre une room
+========================================= */
+
+.page-center {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #F3F4F6;
+}
+
+.join-card {
+  background: white;
+  padding: 40px;
+  width: 380px;
+  border-radius: 8px;
+  border: 1px solid #D1D5DB;
+}
+
+.join-card h1 {
+  margin: 0 0 25px 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: left;
+}
+
+.join-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.join-card input {
+  padding: 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.join-card button {
+  padding: 12px;
+  border: none;
+  background: #059669;
+  color: white;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.join-card button:hover {
+  background: #34D399;
+}
+
+/* =========================================
+   PAGE : Chat
+========================================= */
+
+.chat-container {
+  max-width: 650px;
+  margin: 40px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chat-container h1 {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #D1D5DB;
+}
+
+/* Messages */
+.messages {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  height: 420px;
+  overflow-y: auto;
+  border: 1px solid #D1D5DB;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.system-message {
+  text-align: center;
+  font-style: italic;
+  color: #6B7280;
+  font-size: 0.9rem;
+}
+
+.message-bubble {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  max-width: 75%;
+  line-height: 1.4;
+}
+
+.message-bubble.me {
+  align-self: flex-end;
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.message-bubble .author {
+  font-size: 0.75rem;
+  color: #6B7280;
+  margin-bottom: 4px;
+}
+
+/* Typing indicator */
+.typing-indicator {
+  font-size: 0.9rem;
+  color: #6B7280;
+  font-style: italic;
+  margin-top: -5px;
+  margin-bottom: 5px;
+  padding-left: 4px;
+}
+
+/* Input */
+.input-area {
+  display: flex;
+  gap: 10px;
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #D1D5DB;
+}
+
+.input-area input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #D1D5DB;
+  font-size: 1rem;
+}
+
+.input-area button {
+  padding: 12px 18px;
+  border: none;
+  background: #059669;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.input-area button:hover {
+  background: #34D399;
+}
