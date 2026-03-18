@@ -1,0 +1,34 @@
+services:
+  # ── Service API ──────────────────────────────────────────────
+  - type: web
+    name: chat-api
+    runtime: docker
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /health
+
+  # ── Service Web ──────────────────────────────────────────────
+  - type: web
+    name: chat-web
+    runtime: docker
+    dockerfilePath: ./web/Dockerfile
+    dockerContext: ./web
+    envVars:
+      - key: VITE_API_URL
+        value: https://chat-api.onrender.com
+```
+
+---
+
+### Étape 11 — `.gitignore` racine
+```
+node_modules/
+dist/
+.env
+.env.local
+*.log
