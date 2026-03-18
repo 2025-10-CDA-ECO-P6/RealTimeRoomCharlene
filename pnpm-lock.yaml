@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  api:
+  monorepo-chat/api:
     dependencies:
       cors:
         specifier: ^2.8.6
@@ -20,7 +20,7 @@ importers:
         specifier: ^4.8.3
         version: 4.8.3
 
-  web:
+  monorepo-chat/web:
     dependencies:
       react:
         specifier: ^18.2.0
