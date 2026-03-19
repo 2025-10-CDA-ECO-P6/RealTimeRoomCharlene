@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
+import GamePage from "./GamePage";
+import MemoryBoard from "./games/memory/MemoryBoard";
 
 const socket = io("https://chat-api-eepo.onrender.com", {
   transports: ["websocket"],
@@ -77,7 +79,7 @@ function App() {
 
  // PAGE : Rejoindre une room
 if (!joined) {
-  const rooms = ["Général", "Mémory", "Puissance 4", "VIP"];
+  const rooms = ["Général", "Memory", "Puissance 4", "VIP"];
 
   return (
     <div className="join">
@@ -110,50 +112,70 @@ if (!joined) {
     </div>
   );
 }
-  // PAGE : Chat
-  return (
-    <div className="chat">
-      <div className="chat__layout">
-        <main className="chat__main">
-          <h1 className="chat__header">Room : {room}</h1>
-          <div className="messages">
-            {messages.map((m, i) =>
-              m.pseudo === "SYSTEM" ? (
-                <div key={i} className="messages__item messages__item--system">
-                  {m.content}
-                </div>
-              ) : (
-                <div
-                  key={i}
-                  className={`messages__item ${m.pseudo === pseudo ? "messages__item--me" : "messages__item--other"}`}
-                >
-                  <span className="messages__author">{m.pseudo}</span>
-                  <p className="messages__text">{m.content}</p>
-                </div>
-              )
-            )}
-            <div ref={messagesEndRef}></div>
-          </div>
-          {userTyping && userTyping !== pseudo && (
-            <div className="chat__typing">{userTyping} est en train d'écrire…</div>
+
+// PAGE : Chat
+// Afficher le Memory seulement si on est dans la room "Memory"
+const showMemory = room === "Memory";
+
+const chatContent = (
+  <div className="chat">
+    <div className="chat__layout">
+      <main className="chat__main">
+        <h1 className="chat__header">Room : {room}</h1>
+
+        <div className="messages">
+          {messages.map((m, i) =>
+            m.pseudo === "SYSTEM" ? (
+              <div key={i} className="messages__item messages__item--system">
+                {m.content}
+              </div>
+            ) : (
+              <div
+                key={i}
+                className={`messages__item ${
+                  m.pseudo === pseudo
+                    ? "messages__item--me"
+                    : "messages__item--other"
+                }`}
+              >
+                <span className="messages__author">{m.pseudo}</span>
+                <p className="messages__text">{m.content}</p>
+              </div>
+            )
           )}
-          <form className="input-bar" onSubmit={handleSend}>
-            <input
-              className="input-bar__field"
-              placeholder="Votre message"
-              value={message}
-              onChange={handleTyping}
-            />
-            <button className="input-bar__btn" type="submit">Envoyer</button>
-          </form>
-        </main>
-        <aside className="chat__sidebar">
-          <h2 className="chat__sidebar-title">Room</h2>
-          <p className="chat__sidebar-room">{room}</p>
-        </aside>
-      </div>
+          <div ref={messagesEndRef}></div>
+        </div>
+
+        {userTyping && userTyping !== pseudo && (
+          <div className="chat__typing">{userTyping} écrit…</div>
+        )}
+
+        <form className="input-bar" onSubmit={handleSend}>
+          <input
+            className="input-bar__field"
+            placeholder="Votre message"
+            value={message}
+            onChange={handleTyping}
+          />
+          <button className="input-bar__btn" type="submit">
+            Envoyer
+          </button>
+        </form>
+      </main>
     </div>
+  </div>
+);
+
+// Afficher soit GamePage + Memory, soit le chat seul
+if (showMemory) {
+  return (
+    <GamePage game={<MemoryBoard />}>
+      {chatContent}
+    </GamePage>
   );
+} else {
+  return chatContent;
+}
 }
 
 export default App;

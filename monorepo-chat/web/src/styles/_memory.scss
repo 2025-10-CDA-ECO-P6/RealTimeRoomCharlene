@@ -1,0 +1,134 @@
+// Styles pour le jeu Memory
+
+.memory-card {
+  width: 80px;
+  height: 80px;
+  font-size: 2rem;
+  border-radius: 12px;
+  border: 2.5px solid;
+  cursor: pointer;
+  transition: all 300ms ease;
+  font-weight: bold;
+  background-color: #06b6d4; // cyan-500
+
+  &:hover:not(:disabled) {
+    background-color: #22d3ee; // cyan-400
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  // Carte non retournée (fermée)
+  &--closed {
+    background-color: #06b6d4;
+    border-color: #0891b2;
+    color: transparent;
+
+    &:hover:not(:disabled) {
+      background-color: #22d3ee;
+    }
+  }
+
+  // Carte retournée (ouverte)
+  &--open {
+    background-color: #ffffff;
+    border-color: #06b6d4;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  // Carte trouvée (matched)
+  &--matched {
+    background-color: #dcfce7;
+    border-color: #4ade80;
+    cursor: default;
+  }
+}
+
+.memory-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  max-width: fit-content;
+}
+
+.memory-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: #4b5563;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.memory-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: #1f2937;
+  text-align: center;
+}
+
+.memory-victory {
+  background-color: #dcfce7;
+  border: 1px solid #4ade80;
+  color: #15803d;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.memory-leaderboard {
+  width: 208px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .leaderboard-item {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .item-player {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #1f2937;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-stats {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-left: 1.5rem;
+    }
+  }
+}

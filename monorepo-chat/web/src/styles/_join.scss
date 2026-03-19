@@ -112,4 +112,10 @@
       font-weight: bold;
     }
   }
+  &__error {
+    color: #EF4444;
+    font-size: $font-size-sm;
+    margin: 0;
+    text-align: center;
+  }
 }
