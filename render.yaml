@@ -19,7 +19,7 @@ services:
     runtime: docker
     dockerfilePath: ./web/Dockerfile
     dockerContext: ./web
-    port: 80
+    port: 5173
     envVars:
       - key: VITE_API_URL
         value: https://realtimeroomcharlene.onrender.com
