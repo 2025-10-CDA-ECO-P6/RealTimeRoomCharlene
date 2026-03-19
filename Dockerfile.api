@@ -4,16 +4,15 @@ RUN npm install -g pnpm@8
 
 WORKDIR /app
 
-# Copier lockfiles et package.json de la racine
+# IMPORTANT: Copier d'abord TOUS les package.json et les lockfiles
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-
-# Copier le package.json de l'API
 COPY monorepo-chat/api/package.json ./monorepo-chat/api/
+COPY monorepo-chat/web/package.json ./monorepo-chat/web/
 
-# Installer les dépendances (production only)
+# Installer les dépendances du workspace (production only)
 RUN pnpm install --frozen-lockfile --prod
 
-# Copier le code source de l'API
+# Maintenant copier SEULEMENT le code de l'API
 COPY monorepo-chat/api ./monorepo-chat/api
 
 EXPOSE 3001

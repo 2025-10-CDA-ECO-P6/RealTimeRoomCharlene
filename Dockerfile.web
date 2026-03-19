@@ -8,20 +8,19 @@ RUN npm install -g pnpm@8
 
 WORKDIR /app
 
-# Copier lockfiles et package.json de la racine
+# IMPORTANT: Copier d'abord TOUS les package.json et les lockfiles
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-
-# Copier le package.json du web
+COPY monorepo-chat/api/package.json ./monorepo-chat/api/
 COPY monorepo-chat/web/package.json ./monorepo-chat/web/
 
-# Installer les dépendances
+# Installer les dépendances du workspace PUIS du web uniquement
 RUN pnpm install --frozen-lockfile
 
-# Copier le code source du web
+# Maintenant copier SEULEMENT le code du web (pas le test ni l'api)
 COPY monorepo-chat/web ./monorepo-chat/web
 
-# Build – depuis la racine, utiliser --filter web
-RUN pnpm --filter web build
+# Build depuis la racine avec le filter web
+RUN cd /app && pnpm --filter web build
 
 # ── Étape 2 : serve ──────────────────────────────────────────────
 FROM nginx:alpine
@@ -58,6 +57,13 @@ server {
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+
+EXPOSE 80
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
