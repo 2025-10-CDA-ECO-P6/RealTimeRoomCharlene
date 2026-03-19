@@ -9,18 +9,16 @@ RUN npm install -g pnpm@8
 
 WORKDIR /app
 
-# Copier uniquement les fichiers nécessaires pour l'installation
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY monorepo-chat/web/package.json ./monorepo-chat/web/
+# Copier uniquement le répertoire web et les fichiers de lockfile du monorepo
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY . ./
 
-# Installer les dépendances (build uniquement)
-RUN pnpm install --frozen-lockfile
+# Installer les dépendances uniquement pour le web package
+RUN pnpm install --frozen-lockfile --filter web
 
-# Copier le code source du web package
-COPY monorepo-chat/web ./monorepo-chat/web
-
-# Générer dist/ avec Vite
-RUN pnpm --filter web build
+# Générer dist/ avec Vite – depuis /app/monorepo-chat/web
+WORKDIR /app/monorepo-chat/web
+RUN pnpm build
 
 # ── Étape 2 : serve ──────────────────────────────────────────────
 # On repart d'une image Nginx vierge — on n'embarque pas node_modules
