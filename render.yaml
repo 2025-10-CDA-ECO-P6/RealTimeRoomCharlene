@@ -4,6 +4,7 @@ services:
     runtime: docker
     plan: free
     dockerfilePath: Dockerfile.api
+    dockerContext: ./
     envVars:
       - key: PORT
         value: 3001
@@ -16,6 +17,7 @@ services:
     runtime: docker
     plan: free
     dockerfilePath: Dockerfile.web
+    dockerContext: ./
     dockerBuildArgs:
       - key: VITE_API_URL
         value: https://chat-api-eepo.onrender.com
