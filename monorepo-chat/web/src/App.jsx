@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import GamePage from "./GamePage";
-import MemoryBoard from "./games/memory/MemoryBoard";
+import MemoryBoard from "./games/memory/memoryBoard";
 import Puissance4Board from "./games/puissance4/puissance4Board";
 
 const socket = io("https://chat-api-eepo.onrender.com", {
