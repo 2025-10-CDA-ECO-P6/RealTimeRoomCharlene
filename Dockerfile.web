@@ -1,0 +1,67 @@
+# ── Étape 1 : build ──────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+RUN npm install -g pnpm@8
+
+WORKDIR /app
+
+# Copier lockfiles et package.json de la racine
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copier le package.json du web
+COPY monorepo-chat/web/package.json ./monorepo-chat/web/
+
+# Installer les dépendances
+RUN pnpm install --frozen-lockfile
+
+# Copier le code source du web
+COPY monorepo-chat/web ./monorepo-chat/web
+
+# Build – depuis la racine, utiliser --filter web
+RUN pnpm --filter web build
+
+# ── Étape 2 : serve ──────────────────────────────────────────────
+FROM nginx:alpine
+
+COPY --from=builder /app/monorepo-chat/web/dist /usr/share/nginx/html
+
+RUN cat > /etc/nginx/conf.d/default.conf <<'EOF'
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+    }
+
+    location /api {
+        proxy_pass http://chat-api:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /socket.io {
+        proxy_pass http://chat-api:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+
+EXPOSE 80

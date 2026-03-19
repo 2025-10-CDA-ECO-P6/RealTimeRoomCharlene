@@ -1,0 +1,21 @@
+FROM node:20-alpine
+
+RUN npm install -g pnpm@8
+
+WORKDIR /app
+
+# Copier lockfiles et package.json de la racine
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copier le package.json de l'API
+COPY monorepo-chat/api/package.json ./monorepo-chat/api/
+
+# Installer les dépendances (production only)
+RUN pnpm install --frozen-lockfile --prod
+
+# Copier le code source de l'API
+COPY monorepo-chat/api ./monorepo-chat/api
+
+EXPOSE 3001
+
+CMD ["node", "monorepo-chat/api/src/index.js"]

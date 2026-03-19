@@ -3,8 +3,7 @@ services:
     name: chat-api
     runtime: docker
     plan: free
-    dockerfilePath: monorepo-chat/api/Dockerfile
-    dockerContext: ./
+    dockerfilePath: Dockerfile.api
     envVars:
       - key: PORT
         value: 3001
@@ -16,8 +15,7 @@ services:
     name: chat-web
     runtime: docker
     plan: free
-    dockerfilePath: monorepo-chat/web/Dockerfile
-    dockerContext: ./
+    dockerfilePath: Dockerfile.web
     dockerBuildArgs:
       - key: VITE_API_URL
         value: https://chat-api-eepo.onrender.com
