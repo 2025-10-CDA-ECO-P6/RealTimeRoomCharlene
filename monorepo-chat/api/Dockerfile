@@ -7,7 +7,7 @@ WORKDIR /app
 # Depuis la racine du repo (contexte = racine)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY monorepo-chat/api/package.json ./monorepo-chat/api/
-COPY monorepo-chat/web/package.json ./monorepo-chat/web/
+COPY monorepo-chat/api/src ./monorepo-chat/api/src
 
 # Install dépendances (prod only)
 RUN pnpm install --frozen-lockfile --prod

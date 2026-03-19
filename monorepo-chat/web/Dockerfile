@@ -9,9 +9,10 @@ RUN npm install -g pnpm@8
 WORKDIR /app
 
 # Depuis la racine du repo (contexte = racine)
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-workspace.yaml ./
 COPY monorepo-chat/web/package.json ./monorepo-chat/web/
-COPY monorepo-chat/api/package.json ./monorepo-chat/api/
+COPY monorepo-chat/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY monorepo-chat/web/src ./monorepo-chat/web/src
 
 # Install dépendances
 RUN pnpm install --frozen-lockfile
