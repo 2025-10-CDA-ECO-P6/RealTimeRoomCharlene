@@ -6,11 +6,11 @@ WORKDIR /app
 
 # On copie d'abord les manifestes pour profiter du cache Docker
 # Si package.json ne change pas, Docker réutilise le layer npm install
-COPY package.json ./
+COPY package*.json ./
 RUN npm install --omit=dev
 
 # Ensuite le code source
-COPY src ./src
+COPY . .
 
 # Port exposé (documentaire — Render utilise la var PORT)
 EXPOSE 3001

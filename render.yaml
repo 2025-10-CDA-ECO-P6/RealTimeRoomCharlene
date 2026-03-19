@@ -20,12 +20,12 @@ services:
     dockerContext: ./web
     envVars:
       - key: VITE_API_URL
-        value: https://chat-api.onrender.com
+        value: https://realtimeroomcharlene.onrender.com
 ```
 
 ---
 
-### Étape 11 — `.gitignore` racine
+### `.gitignore` racine
 ```
 node_modules/
 dist/
