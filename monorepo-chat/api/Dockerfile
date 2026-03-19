@@ -1,23 +1,34 @@
-FROM node:20-alpine
-
-RUN npm install -g pnpm@8
+# ---------- BUILDER ----------
+FROM node:20 AS builder
 
 WORKDIR /app
 
-# Depuis la racine du repo (contexte = racine)
+# Copy workspace files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY monorepo-chat/api/package.json ./monorepo-chat/api/
-COPY monorepo-chat/api/src ./monorepo-chat/api/src
 
-# Install dépendances (prod only)
-RUN pnpm install --frozen-lockfile --prod
+# Copy the entire monorepo
+COPY monorepo-chat ./monorepo-chat
 
-# Code API
-COPY monorepo-chat/api ./monorepo-chat/api
+# Enable pnpm
+RUN corepack enable
+
+# Install only API dependencies
+RUN pnpm install --filter ./monorepo-chat/api...
+
+# Build API (if needed)
+WORKDIR /app/monorepo-chat/api
+RUN pnpm run build || echo "No build step"
+
+# ---------- RUNNER ----------
+FROM node:20 AS runner
+
+WORKDIR /app
+
+# Copy only the built API + node_modules
+COPY --from=builder /app/monorepo-chat/api ./monorepo-chat/api
+
+WORKDIR /app/monorepo-chat/api
 
 EXPOSE 3001
 
-CMD ["node", "monorepo-chat/api/src/index.js"]
-EXPOSE 3001
-
-CMD ["node", "monorepo-chat/api/src/index.js"]
+CMD ["pnpm", "start"]

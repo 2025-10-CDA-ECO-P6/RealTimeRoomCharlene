@@ -1,32 +1,33 @@
-# ── BUILD STAGE ────────────────────────────────────────────────
-FROM node:20-alpine AS builder
-
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
-RUN npm install -g pnpm@8
+# ---------- BUILDER ----------
+FROM node:20 AS builder
 
 WORKDIR /app
 
-# Depuis la racine du repo (contexte = racine)
-COPY package.json pnpm-workspace.yaml pnpm-workspace.yaml ./
-COPY monorepo-chat/web/package.json ./monorepo-chat/web/
+# Copy workspace files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy the entire monorepo
+COPY monorepo-chat ./monorepo-chat
+
+# Enable pnpm
+RUN corepack enable
+
+# Install only web dependencies
+RUN pnpm install --filter ./monorepo-chat/web...
+
+# Build Vite app
+WORKDIR /app/monorepo-chat/web
+RUN pnpm run build
+
+# ---------- NGINX ----------
+FROM nginx:1.25-alpine
+
+# Copy custom nginx config
 COPY monorepo-chat/web/nginx.conf /etc/nginx/conf.d/default.conf
-COPY monorepo-chat/web/src ./monorepo-chat/web/src
 
-# Install dépendances
-RUN pnpm install --frozen-lockfile
-
-# Code source web
-COPY monorepo-chat/web ./monorepo-chat/web
-
-# Build
-RUN pnpm --filter web build
-
-# ── SERVE STAGE ────────────────────────────────────────────────
-FROM nginx:alpine
-
+# Copy built assets
 COPY --from=builder /app/monorepo-chat/web/dist /usr/share/nginx/html
-COPY monorepo-chat/web/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
