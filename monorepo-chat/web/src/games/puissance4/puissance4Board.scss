@@ -1,0 +1,267 @@
+.puissance4-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  width: 100%;
+}
+
+.puissance4-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin: 0;
+  text-align: center;
+}
+
+.puissance4-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.puissance4-status {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  min-height: 1.5rem;
+
+  &__current {
+    &.player-1 {
+      color: #dc2626;
+    }
+
+    &.player-2 {
+      color: #2563eb;
+    }
+  }
+
+  &__winner {
+    font-size: 1.125rem;
+    font-weight: bold;
+
+    &.player-1 {
+      color: #dc2626;
+    }
+
+    &.player-2 {
+      color: #2563eb;
+    }
+  }
+
+  &__draw {
+    color: #7c3aed;
+    font-weight: bold;
+  }
+}
+
+.puissance4-btn {
+  background-color: #06b6d4;
+  color: white;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.375rem;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 200ms;
+
+  &:hover {
+    background-color: #0891b2;
+  }
+
+  &:active {
+    background-color: #06b6d4;
+  }
+}
+
+.puissance4-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 1rem;
+  background: linear-gradient(135deg, #1e40af 0%, #0c4a6e 100%);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.puissance4-drop-zone {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.puissance4-drop-btn {
+  width: 60px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 200ms;
+  border-radius: 0.25rem;
+
+  &:hover:not(:disabled) {
+    opacity: 0.3;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.puissance4-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #1e40af 0%, #0c4a6e 100%);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.puissance4-cell {
+  width: 60px;
+  height: 60px;
+  background-color: #e0f2fe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 200ms;
+
+  &--empty {
+    background-color: #e0f2fe;
+  }
+
+  &--player1 {
+    background-color: #fee2e2;
+  }
+
+  &--player2 {
+    background-color: #dbeafe;
+  }
+
+  &--winning {
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.8),
+      inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: pulse 500ms infinite;
+  }
+}
+
+.puissance4-piece {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: drop 300ms ease-out;
+
+  &.player-1 {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+
+  &.player-2 {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  }
+}
+
+.puissance4-legend {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .puissance4-piece {
+    width: 24px;
+    height: 24px;
+    animation: none;
+  }
+}
+
+// Animation de chute
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Animation de pulsation pour les pièces gagnantes
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.8),
+      inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 1),
+      inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Responsive
+@media (max-width: 900px) {
+  .puissance4-grid {
+    gap: 0.375rem;
+  }
+
+  .puissance4-cell {
+    width: 50px;
+    height: 50px;
+  }
+
+  .puissance4-piece {
+    width: 45px;
+    height: 45px;
+  }
+
+  .puissance4-drop-btn {
+    width: 50px;
+    height: 35px;
+  }
+
+  .puissance4-controls {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .puissance4-grid {
+    gap: 0.25rem;
+    padding: 0.25rem;
+  }
+
+  .puissance4-cell {
+    width: 40px;
+    height: 40px;
+  }
+
+  .puissance4-piece {
+    width: 36px;
+    height: 36px;
+  }
+
+  .puissance4-drop-btn {
+    width: 40px;
+    height: 30px;
+  }
+
+  .puissance4-title {
+    font-size: 1.5rem;
+  }
+}

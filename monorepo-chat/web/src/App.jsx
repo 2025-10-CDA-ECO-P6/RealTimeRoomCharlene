@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import GamePage from "./GamePage";
 import MemoryBoard from "./games/memory/MemoryBoard";
+import Puissance4Board from "./games/puissance4/puissance4Board";
 
 const socket = io("https://chat-api-eepo.onrender.com", {
   transports: ["websocket"],
@@ -14,6 +15,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [userTyping, setUserTyping] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const messagesEndRef = useRef(null);
   let typingTimeout = useRef(null);
@@ -51,7 +53,12 @@ function App() {
 
   const handleJoin = (e) => {
     e.preventDefault();
-    if (!pseudo || !room) return;
+    if (!pseudo.trim()) {
+      setErrorMessage("Un pseudo est requis pour accéder à une room.");
+      return;
+    }
+    if (!room) return;
+    setErrorMessage("");
     socket.emit("join", { room, pseudo });
     setJoined(true);
   };
@@ -85,6 +92,9 @@ if (!joined) {
     <div className="join">
       <div className="join__card">
         <h1 className="join__title">Rejoindre une room</h1>
+        {errorMessage && (
+          <div className="join__error">{errorMessage}</div>
+        )}
         <form className="join__form" onSubmit={handleJoin}>
           <input
             className="join__input"
@@ -114,8 +124,13 @@ if (!joined) {
 }
 
 // PAGE : Chat
-// Afficher le Memory seulement si on est dans la room "Memory"
-const showMemory = room === "Memory";
+// Déterminer quel jeu afficher selon la room
+let gameComponent = null;
+if (room === "Memory") {
+  gameComponent = <MemoryBoard />;
+} else if (room === "Puissance 4") {
+  gameComponent = <Puissance4Board socket={socket} room={room} pseudo={pseudo} />;
+}
 
 const chatContent = (
   <div className="chat">
@@ -166,10 +181,10 @@ const chatContent = (
   </div>
 );
 
-// Afficher soit GamePage + Memory, soit le chat seul
-if (showMemory) {
+// Afficher soit GamePage + jeu, soit le chat seul
+if (gameComponent) {
   return (
-    <GamePage game={<MemoryBoard />}>
+    <GamePage game={gameComponent}>
       {chatContent}
     </GamePage>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createBoard, flipCard, checkMatch, isGameWon } from "./memory";
+import "./memoryBoard.scss";
 
 const SYMBOLS = ["🐶", "🐱", "🐭", "🐹", "🦊", "🐻", "🐼", "🐨"];
 const LEADERBOARD_KEY = "memory-leaderboard";
@@ -110,24 +111,24 @@ export default function MemoryBoard() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <h1 className="text-3xl font-bold text-gray-800">Memory Game</h1>
+    <div className="memory-container">
+      <h1 className="memory-title">Memory Game</h1>
 
       {/* Barre de contrôles */}
-      <div className="flex items-center gap-4 flex-wrap justify-center text-gray-600">
+      <div className="memory-controls">
         <input
           type="text"
           value={pseudo}
           onChange={(e) => setPseudo(e.target.value)}
           placeholder="Entrez votre pseudo"
           maxLength={20}
-          className="w-[356px] border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          className="memory-pseudo-input"
         />
         <span>Coups : <strong>{moves}</strong></span>
         <span>⏱️ <strong>{formatTime(time)}</strong></span>
         <button
           onClick={startGame}
-          className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-1.5 rounded text-sm"
+          className="memory-btn"
         >
           Nouvelle partie
         </button>
@@ -135,30 +136,27 @@ export default function MemoryBoard() {
 
       {/* Message de victoire */}
       {won && (
-        <div className="bg-green-100 border border-green-400 text-green-800 px-6 py-3 rounded-lg text-center">
+        <div className="memory-victory">
           🎉 Bravo <strong>{pseudo || "Anonyme"}</strong> ! Partie terminée en{" "}
           <strong>{moves}</strong> coups et <strong>{formatTime(time)}</strong> !
         </div>
       )}
 
-      <div className="flex gap-10 items-start">
+      <div className="memory-content">
         {/* Plateau */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="memory-board">
           {board.map((card) => (
             <button
               key={card.id}
               onClick={() => handleCardClick(card.id)}
               disabled={card.isMatched || card.isFlipped || locked}
-              className={`
-                w-20 h-20 text-3xl rounded-xl border-2 transition-all duration-300 font-bold
-                ${
-                  card.isMatched
-                    ? "bg-green-100 border-green-400 cursor-default"
-                    : card.isFlipped
-                    ? "bg-white border-cyan-400 shadow-md"
-                    : "bg-cyan-500 border-cyan-600 hover:bg-cyan-400 cursor-pointer"
-                }
-              `}
+              className={`memory-card ${
+                card.isMatched
+                  ? "memory-card--matched"
+                  : card.isFlipped
+                  ? "memory-card--open"
+                  : "memory-card--closed"
+              }`}
             >
               {card.isFlipped || card.isMatched ? card.symbol : ""}
             </button>
@@ -167,30 +165,19 @@ export default function MemoryBoard() {
 
         {/* Palmarès */}
         {leaderboard.length > 0 && (
-          <div className="w-52">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 text-center">
-              🏆 Palmarès
-            </h2>
-            <div className="bg-white border border-gray-200 rounded-xl shadow overflow-hidden">
-              {leaderboard.map((s, i) => (
-                <div
-                  key={i}
-                  className={`px-3 py-2 ${
-                    i < leaderboard.length - 1 ? "border-b border-gray-100" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>{["🥇", "🥈", "🥉"][i]}</span>
-                    <span className="font-semibold text-sm text-gray-800 truncate">
-                      {s.pseudo}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 ml-6">
-                    {s.moves} coups · {formatTime(s.time)} · {s.date}
-                  </div>
+          <div className="memory-leaderboard">
+            <h2>🏆 Palmarès</h2>
+            {leaderboard.map((s, i) => (
+              <div key={i} className="leaderboard-item">
+                <div className="item-player">
+                  <span>{["🥇", "🥈", "🥉"][i]}</span>
+                  <span>{s.pseudo}</span>
                 </div>
-              ))}
-            </div>
+                <div className="item-stats">
+                  {s.moves} coups · {formatTime(s.time)} · {s.date}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

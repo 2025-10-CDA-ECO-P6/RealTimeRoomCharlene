@@ -154,8 +154,130 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("typing", ({ room, pseudo }) => {
+    if (!room || !pseudo) return;
+    socket.to(room).emit("typing", { pseudo });
+  });
+
+  socket.on("stopTyping", ({ room }) => {
+    if (!room) return;
+    socket.to(room).emit("stopTyping");
+  });
+
   // ----------------------------------------------------------
-  // PUISSANCE 4 — CRÉATION / JOIN / MOUVEMENTS
+  // PUISSANCE 4 ROOM-BASÉ (MULTIJOUEUR)
+  // ----------------------------------------------------------
+  const p4Games = new Map(); // room → { players: [{ id, pseudo, playerNum }], board, currentPlayer }
+
+  socket.on("p4-join", ({ room, pseudo }) => {
+    console.log(`P4 JOIN : ${pseudo} (${socket.id}) -> ${room}`);
+    if (!room || !pseudo) return;
+
+    socket.join(room);
+
+    // Initialiser la game si elle n'existe pas
+    if (!p4Games.has(room)) {
+      p4Games.set(room, {
+        players: [],
+        board: Array.from({ length: 6 }, () => Array(7).fill(null)),
+        currentPlayer: 1,
+      });
+    }
+
+    const game = p4Games.get(room);
+
+    // Vérifier que le joueur n'est pas déjà dans la partie
+    if (game.players.some((p) => p.id === socket.id)) {
+      return;
+    }
+
+    // Assigner le numéro de joueur
+    let playerNum;
+    if (game.players.length === 0) {
+      playerNum = 1;
+      // Envoyer "waiting" au premier joueur
+      socket.emit("p4-waiting");
+    } else if (game.players.length === 1) {
+      playerNum = 2;
+      // Assigner les deux joueurs
+      const opponent1 = game.players[0];
+      io.to(opponent1.id).emit("p4-player-assigned", {
+        playerNum: 1,
+        opponent: pseudo,
+      });
+      socket.emit("p4-player-assigned", { playerNum: 2, opponent: opponent1.pseudo });
+    } else {
+      // Trop de joueurs, rejeter
+      return socket.emit("message", "P4: Partie complète");
+    }
+
+    game.players.push({ id: socket.id, pseudo, playerNum });
+  });
+
+  socket.on("p4-move", ({ room, col }) => {
+    if (!room || !p4Games.has(room)) return;
+
+    const game = p4Games.get(room);
+    const player = game.players.find((p) => p.id === socket.id);
+    if (!player) return;
+
+    // Valider que c'est le tour du joueur
+    if (player.playerNum !== game.currentPlayer) return;
+
+    // Appliquer le coup
+    let placed = false;
+    for (let row = 5; row >= 0; row--) {
+      if (game.board[row][col] === null) {
+        game.board[row][col] = game.currentPlayer;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) return; // Colonne pleine
+
+    // Vérifier gagnant
+    const winner = checkWinner(game.board);
+    const isDraw = game.board.every((row) => row.every((cell) => cell !== null));
+
+    if (winner || isDraw) {
+      // Partie terminée
+      io.to(room).emit("p4-game-over", {
+        winner: winner || null,
+        isDraw,
+        board: game.board,
+      });
+      p4Games.delete(room);
+      return;
+    }
+
+    // Changer de joueur
+    game.currentPlayer = game.currentPlayer === 1 ? 2 : 1;
+
+    // Notifier l'autre joueur
+    const otherPlayer = game.players.find((p) => p.playerNum !== player.playerNum);
+    if (otherPlayer) {
+      socket.to(otherPlayer.id).emit("p4-move", { col });
+    }
+  });
+
+  socket.on("p4-restart", ({ room }) => {
+    if (!p4Games.has(room)) {
+      p4Games.set(room, {
+        players: p4Games.get(room)?.players || [],
+        board: Array.from({ length: 6 }, () => Array(7).fill(null)),
+        currentPlayer: 1,
+      });
+    } else {
+      const game = p4Games.get(room);
+      game.board = Array.from({ length: 6 }, () => Array(7).fill(null));
+      game.currentPlayer = 1;
+    }
+
+    io.to(room).emit("p4-restart-ack");
+  });
+
+  // ----------------------------------------------------------
+  // ANCIENNE PUISSANCE 4 (À GARDER POUR COMPATIBILITÉ)
   // ----------------------------------------------------------
   socket.on("create_game", () => {
     const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -245,6 +367,20 @@ io.on("connection", (socket) => {
     connectedUsers--;
     io.emit("users count", connectedUsers);
 
+    // P4 room-based: notifier l'adversaire
+    for (const [room, game] of p4Games.entries()) {
+      const player = game.players.find((p) => p.id === socket.id);
+      if (player) {
+        const otherPlayer = game.players.find((p) => p.id !== socket.id);
+        if (otherPlayer) {
+          io.to(otherPlayer.id).emit("p4-opponent-left");
+        }
+        p4Games.delete(room);
+        break;
+      }
+    }
+
+    // Ancienne logique P4 (compatibilité)
     // Si un joueur quitte une partie en cours
     for (const [roomId, game] of games.entries()) {
       if (game.players.includes(socket.id)) {
