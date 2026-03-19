@@ -1,0 +1,33 @@
+// Couleurs
+$color-primary:     #0EA5E9;   // bleu vif
+$color-secondary:   #10B981;   // vert émeraude
+$color-accent:      #06B6D4;   // cyan
+$color-bg:          #F0F9FF;   // fond bleu très clair
+$color-surface:     #FFFFFF;
+$color-border:      #BAE6FD;
+$color-text:        #0F172A;
+$color-text-muted:  #64748B;
+$color-me-bg:       #ECFDF5;
+$color-me-border:   #6EE7B7;
+
+// Typographie
+$font-base: 'Arial', sans-serif;
+$font-size-sm: 0.8rem;
+$font-size-md: 1rem;
+$font-size-lg: 1.4rem;
+
+// Espacements
+$spacing-xs: 8px;
+$spacing-sm: 12px;
+$spacing-md: 20px;
+$spacing-lg: 40px;
+
+// Bordures
+$radius-sm: 6px;
+$radius-md: 12px;
+$radius-lg: 20px;
+
+// Breakpoints
+$bp-mobile: 480px;
+$bp-tablet: 768px;
+$bp-desktop: 1024px;

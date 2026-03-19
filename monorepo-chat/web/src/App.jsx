@@ -75,71 +75,83 @@ function App() {
     }, 1000);
   };
 
-  // PAGE : Rejoindre une room
-  if (!joined) {
-    return (
-      <div className="page-center">
-        <div className="join-card">
-          <h1>Rejoindre une room</h1>
+ // PAGE : Rejoindre une room
+if (!joined) {
+  const rooms = ["Général", "Mémory", "Puissance 4", "VIP"];
 
-          <form onSubmit={handleJoin}>
-            <input
-              placeholder="Pseudo"
-              value={pseudo}
-              onChange={(e) => setPseudo(e.target.value)}
-            />
-            <input
-              placeholder="Room"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-            />
-            <button type="submit">Entrer</button>
-          </form>
-        </div>
+  return (
+    <div className="join">
+      <div className="join__card">
+        <h1 className="join__title">Rejoindre une room</h1>
+        <form className="join__form" onSubmit={handleJoin}>
+          <input
+            className="join__input"
+            placeholder="Pseudo"
+            value={pseudo}
+            onChange={(e) => setPseudo(e.target.value)}
+          />
+          <div className="join__rooms">
+            {rooms.map((r) => (
+              <button
+                key={r}
+                type="button"
+                className={`join__room-btn ${room === r ? "join__room-btn--active" : ""}`}
+                onClick={() => setRoom(r)}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <button className="join__btn" type="submit" disabled={!room}>
+            Entrer
+          </button>
+        </form>
       </div>
-    );
-  }
-
+    </div>
+  );
+}
   // PAGE : Chat
   return (
-    <div className="chat-container">
-      <h1>Room : {room}</h1>
-
-      <div className="messages">
-        {messages.map((m, i) =>
-          m.pseudo === "SYSTEM" ? (
-            <div key={i} className="system-message">
-              {m.content}
-            </div>
-          ) : (
-            <div
-              key={i}
-              className={`message-bubble ${
-                m.pseudo === pseudo ? "me" : "other"
-              }`}
-            >
-              <span className="author">{m.pseudo}</span>
-              <p>{m.content}</p>
-            </div>
-          )
-        )}
-        <div ref={messagesEndRef}></div>
+    <div className="chat">
+      <div className="chat__layout">
+        <main className="chat__main">
+          <h1 className="chat__header">Room : {room}</h1>
+          <div className="messages">
+            {messages.map((m, i) =>
+              m.pseudo === "SYSTEM" ? (
+                <div key={i} className="messages__item messages__item--system">
+                  {m.content}
+                </div>
+              ) : (
+                <div
+                  key={i}
+                  className={`messages__item ${m.pseudo === pseudo ? "messages__item--me" : "messages__item--other"}`}
+                >
+                  <span className="messages__author">{m.pseudo}</span>
+                  <p className="messages__text">{m.content}</p>
+                </div>
+              )
+            )}
+            <div ref={messagesEndRef}></div>
+          </div>
+          {userTyping && userTyping !== pseudo && (
+            <div className="chat__typing">{userTyping} est en train d'écrire…</div>
+          )}
+          <form className="input-bar" onSubmit={handleSend}>
+            <input
+              className="input-bar__field"
+              placeholder="Votre message"
+              value={message}
+              onChange={handleTyping}
+            />
+            <button className="input-bar__btn" type="submit">Envoyer</button>
+          </form>
+        </main>
+        <aside className="chat__sidebar">
+          <h2 className="chat__sidebar-title">Room</h2>
+          <p className="chat__sidebar-room">{room}</p>
+        </aside>
       </div>
-
-      {userTyping && userTyping !== pseudo && (
-        <div className="typing-indicator">
-          {userTyping} est en train d’écrire…
-        </div>
-      )}
-
-      <form className="input-area" onSubmit={handleSend}>
-        <input
-          placeholder="Votre message"
-          value={message}
-          onChange={handleTyping}
-        />
-        <button type="submit">Envoyer</button>
-      </form>
     </div>
   );
 }

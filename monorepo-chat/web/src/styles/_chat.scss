@@ -1,0 +1,65 @@
+@use 'variables' as *;
+
+.chat {
+  min-height: 100vh;
+  background: $color-bg;
+
+  &__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 100vh;
+
+    @media (min-width: $bp-tablet) {
+      grid-template-columns: 3fr 2fr;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    padding: $spacing-md;
+    gap: $spacing-sm;
+    height: 100vh;
+  }
+
+  &__header {
+    font-size: $font-size-lg;
+    font-weight: bold;
+    padding-bottom: $spacing-sm;
+    border-bottom: 2px solid $color-border;
+    color: $color-text;
+  }
+
+  &__typing {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    font-style: italic;
+    padding-left: 4px;
+  }
+
+  &__sidebar {
+    background: linear-gradient(160deg, $color-primary, $color-secondary);
+    padding: $spacing-lg $spacing-md;
+    display: none;
+    flex-direction: column;
+    gap: $spacing-sm;
+
+    @media (min-width: $bp-tablet) {
+      display: flex;
+    }
+  }
+
+  &__sidebar-title {
+    color: white;
+    font-size: $font-size-sm;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.8;
+  }
+
+  &__sidebar-room {
+    color: white;
+    font-size: 1.6rem;
+    font-weight: bold;
+  }
+}

@@ -1,0 +1,23 @@
+@use 'variables' as *;
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: $font-base;
+  background: $color-bg;
+  color: $color-text;
+  min-height: 100vh;
+}
+
+input, button {
+  font-family: inherit;
+  font-size: $font-size-md;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+}

@@ -18,6 +18,8 @@ services:
     plan: free
     dockerfilePath: ./monorepo-chat/web/Dockerfile
     dockerContext: ./monorepo-chat/web
+    dockerBuildArgs:
+      - VITE_API_URL
     envVars:
       - key: VITE_API_URL
         value: https://chat-api-eepo.onrender.com

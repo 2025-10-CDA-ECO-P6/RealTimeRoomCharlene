@@ -1,0 +1,115 @@
+@use 'variables' as *;
+
+.join {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+
+  // Formes décoratives (asymétrie fond)
+  &::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 320px;
+    height: 320px;
+    background: $color-primary;
+    opacity: 0.12;
+    border-radius: 50%;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -60px;
+    width: 240px;
+    height: 240px;
+    background: $color-secondary;
+    opacity: 0.12;
+    border-radius: 50%;
+  }
+
+  &__card {
+    background: $color-surface;
+    padding: $spacing-lg;
+    width: 90%;
+    max-width: 400px;
+    border-radius: $radius-lg;
+    border: 1px solid $color-border;
+    box-shadow: 0 8px 32px rgba($color-primary, 0.12);
+    position: relative;
+    z-index: 1;
+  }
+
+  &__title {
+    font-size: $font-size-lg;
+    font-weight: bold;
+    margin-bottom: $spacing-md;
+    color: $color-text;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  &__input {
+    padding: $spacing-sm;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    font-size: $font-size-md;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: $color-primary;
+    }
+  }
+
+  &__btn {
+    padding: $spacing-sm;
+    background: $color-secondary;
+    color: white;
+    border-radius: $radius-sm;
+    font-weight: bold;
+    transition: background 0.2s;
+
+    &:hover {
+      background: $color-primary;
+    }
+  }
+
+  &__rooms {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xs;
+  }
+
+  &__room-btn {
+    padding: $spacing-sm;
+    border-radius: $radius-sm;
+    border: 2px solid $color-border;
+    background: white;
+    color: $color-text;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $color-primary;
+      color: $color-primary;
+    }
+
+    &--active {
+      border-color: $color-secondary;
+      background: $color-me-bg;
+      color: $color-secondary;
+      font-weight: bold;
+    }
+  }
+}

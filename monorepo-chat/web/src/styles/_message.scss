@@ -1,0 +1,88 @@
+@use 'variables' as *;
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  background: $color-surface;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  border: 1px solid $color-border;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  &__item {
+    padding: $spacing-sm;
+    border-radius: $radius-sm;
+    max-width: 75%;
+    line-height: 1.4;
+    background: #F1F5F9;
+    border: 1px solid $color-border;
+
+    &--me {
+      align-self: flex-end;
+      background: $color-me-bg;
+      border-color: $color-me-border;
+    }
+
+    &--other {
+      align-self: flex-start;
+    }
+
+    &--system {
+      align-self: center;
+      background: transparent;
+      border: none;
+      font-style: italic;
+      color: $color-text-muted;
+      font-size: $font-size-sm;
+      max-width: 100%;
+    }
+  }
+
+  &__author {
+    display: block;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin-bottom: 4px;
+  }
+
+  &__text {
+    margin: 0;
+  }
+}
+
+.input-bar {
+  display: flex;
+  gap: $spacing-sm;
+  background: $color-surface;
+  padding: $spacing-sm;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+
+  &__field {
+    flex: 1;
+    padding: $spacing-sm;
+    border-radius: $radius-sm;
+    border: 1px solid $color-border;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: $color-primary;
+    }
+  }
+
+  &__btn {
+    padding: $spacing-sm $spacing-md;
+    background: $color-secondary;
+    color: white;
+    border-radius: $radius-sm;
+    font-weight: bold;
+    transition: background 0.2s;
+
+    &:hover {
+      background: $color-primary;
+    }
+  }
+}
