@@ -2,6 +2,7 @@ services:
   - type: web
     name: chat-api
     runtime: docker
+    plan: free
     dockerfilePath: ./api/Dockerfile
     dockerContext: ./api
     envVars:
@@ -14,6 +15,7 @@ services:
   - type: web
     name: chat-web
     runtime: docker
+    plan: free
     dockerfilePath: ./web/Dockerfile
     dockerContext: ./web
     envVars:
