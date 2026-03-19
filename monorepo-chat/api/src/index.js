@@ -3,6 +3,8 @@
 // ============================================================
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import http from "http";
 import { Server } from "socket.io";
 
@@ -11,6 +13,19 @@ import { Server } from "socket.io";
 // ============================================================
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Sécurité
+app.use(helmet());
+
+// Rate limiting : max 100 requêtes par 15 min par IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: "Trop de requêtes, veuillez réessayer plus tard.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
 app.use(cors());
 app.use(express.json());
@@ -43,6 +58,30 @@ const io = new Server(server, {
 // ============================================================
 let connectedUsers = 0;
 const games = new Map(); // roomId → état Puissance 4
+
+// ============================================================
+// VALIDATION UTILS
+// ============================================================
+function validatePseudo(pseudo) {
+  if (!pseudo || typeof pseudo !== "string") return false;
+  const trimmed = pseudo.trim();
+  if (trimmed.length < 2 || trimmed.length > 20) return false;
+  return /^[a-zA-Z0-9_\-àâäéèêëïîôùûüœæçÀÂÄÉÈÊËÏÎÔÙÛÜŒÆÇ ]+$/.test(trimmed);
+}
+
+function validateRoom(room) {
+  if (!room || typeof room !== "string") return false;
+  const trimmed = room.trim();
+  if (trimmed.length < 2 || trimmed.length > 50) return false;
+  return /^[a-zA-Z0-9 \-àâäéèêëïîôùûüœæçÀÂÄÉÈÊËÏÎÔÙÛÜŒÆÇ]+$/.test(trimmed);
+}
+
+function validateMessage(content) {
+  if (!content || typeof content !== "string") return false;
+  const trimmed = content.trim();
+  if (trimmed.length < 1 || trimmed.length > 500) return false;
+  return true;
+}
 
 // ============================================================
 // UTILITAIRES — FORMATAGE DES MESSAGES
@@ -137,30 +176,34 @@ io.on("connection", (socket) => {
   // ----------------------------------------------------------
   socket.on("join", ({ room, pseudo }) => {
     console.log(`JOIN : ${pseudo} -> ${room}`);
-    if (!room || !pseudo) return;
+    if (!validateRoom(room) || !validatePseudo(pseudo)) {
+      return socket.emit("error", "Pseudo ou room invalide");
+    }
 
     socket.join(room);
-    socket.to(room).emit("system", `${pseudo} a rejoint la room`);
+    socket.to(room).emit("system", `${pseudo.trim()} a rejoint la room`);
   });
 
   socket.on("message", ({ room, pseudo, content }) => {
-    console.log(`MESSAGE : ${pseudo} -> ${content}`);
-    if (!room || !pseudo || !content) return;
+    if (!validateRoom(room) || !validatePseudo(pseudo) || !validateMessage(content)) {
+      return socket.emit("error", "Message invalide");
+    }
 
+    console.log(`MESSAGE : ${pseudo} -> ${content}`);
     io.to(room).emit("message", {
-      pseudo,
-      content,
+      pseudo: pseudo.trim(),
+      content: content.trim(),
       timestamp: new Date().toISOString(),
     });
   });
 
   socket.on("typing", ({ room, pseudo }) => {
-    if (!room || !pseudo) return;
-    socket.to(room).emit("typing", { pseudo });
+    if (!validateRoom(room) || !validatePseudo(pseudo)) return;
+    socket.to(room).emit("typing", { pseudo: pseudo.trim() });
   });
 
   socket.on("stopTyping", ({ room }) => {
-    if (!room) return;
+    if (!validateRoom(room)) return;
     socket.to(room).emit("stopTyping");
   });
 
@@ -171,7 +214,9 @@ io.on("connection", (socket) => {
 
   socket.on("p4-join", ({ room, pseudo }) => {
     console.log(`P4 JOIN : ${pseudo} (${socket.id}) -> ${room}`);
-    if (!room || !pseudo) return;
+    if (!validateRoom(room) || !validatePseudo(pseudo)) {
+      return socket.emit("error", "Données invalides");
+    }
 
     socket.join(room);
 
