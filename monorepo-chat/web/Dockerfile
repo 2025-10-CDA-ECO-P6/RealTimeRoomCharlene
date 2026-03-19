@@ -9,15 +9,17 @@ RUN npm install -g pnpm@8
 
 WORKDIR /app
 
+# Copier uniquement les fichiers nécessaires pour l'installation
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY monorepo-chat/web/package.json ./monorepo-chat/web/
-COPY monorepo-chat/test ./monorepo-chat/test
 
+# Installer les dépendances (build uniquement)
 RUN pnpm install --frozen-lockfile
 
+# Copier le code source du web package
 COPY monorepo-chat/web ./monorepo-chat/web
 
-# Vite génère le dossier dist/
+# Générer dist/ avec Vite
 RUN pnpm --filter web build
 
 # ── Étape 2 : serve ──────────────────────────────────────────────
