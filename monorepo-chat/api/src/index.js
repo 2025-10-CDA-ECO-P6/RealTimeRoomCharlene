@@ -214,9 +214,7 @@ io.on("connection", (socket) => {
 
   socket.on("p4-join", ({ room, pseudo }) => {
     console.log(`P4 JOIN : ${pseudo} (${socket.id}) -> ${room}`);
-    if (!validateRoom(room) || !validatePseudo(pseudo)) {
-      return socket.emit("error", "Données invalides");
-    }
+    if (!room || !pseudo) return;
 
     socket.join(room);
 
@@ -442,6 +440,6 @@ io.on("connection", (socket) => {
 // ============================================================
 // DÉMARRAGE SERVEUR
 // ============================================================
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`API + WebSocket running on port ${PORT}`);
 });
