@@ -20,12 +20,14 @@ FROM node:20 AS runner
 
 WORKDIR /app
 
-# Copy only the API folder with node_modules resolved
+# Copy node_modules from builder (CRUCIAL for pnpm)
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy API code
 COPY --from=builder /app/monorepo-chat/api ./monorepo-chat/api
 
 WORKDIR /app/monorepo-chat/api
 
 EXPOSE 3001
 
-# IMPORTANT : on lance Node, pas pnpm
 CMD ["node", "src/index.js"]
