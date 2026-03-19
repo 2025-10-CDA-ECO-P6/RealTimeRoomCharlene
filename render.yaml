@@ -1,11 +1,9 @@
 services:
-  # ── Service API ──────────────────────────────────────────────
   - type: web
     name: chat-api
     runtime: docker
     dockerfilePath: ./api/Dockerfile
     dockerContext: ./api
-    port: 3001
     envVars:
       - key: PORT
         value: 3001
@@ -13,24 +11,11 @@ services:
         value: production
     healthCheckPath: /health
 
-  # ── Service Web ──────────────────────────────────────────────
   - type: web
     name: chat-web
     runtime: docker
     dockerfilePath: ./web/Dockerfile
     dockerContext: ./web
-    port: 5173
     envVars:
       - key: VITE_API_URL
-        value: https://realtimeroomcharlene.onrender.com
-```
-
----
-
-### `.gitignore` racine
-```
-node_modules/
-dist/
-.env
-.env.local
-*.log
+        value: https://chat-api.onrender.com
