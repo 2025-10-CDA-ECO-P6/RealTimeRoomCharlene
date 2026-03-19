@@ -20,4 +20,4 @@ services:
     dockerContext: ./monorepo-chat/web
     envVars:
       - key: VITE_API_URL
-        value: https://chat-api.onrender.com
+        value: https://chat-api-eepo.onrender.com
