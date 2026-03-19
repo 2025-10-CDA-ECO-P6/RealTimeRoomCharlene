@@ -3,7 +3,7 @@ services:
     name: chat-api
     runtime: docker
     plan: free
-    dockerfilePath: Dockerfile.api
+    dockerfilePath: monorepo-chat/api/Dockerfile
     dockerContext: ./
     envVars:
       - key: PORT
@@ -16,7 +16,7 @@ services:
     name: chat-web
     runtime: docker
     plan: free
-    dockerfilePath: Dockerfile.web
+    dockerfilePath: monorepo-chat/web/Dockerfile
     dockerContext: ./
     dockerBuildArgs:
       - key: VITE_API_URL
