@@ -199,14 +199,16 @@ io.on("connection", (socket) => {
     const draw = game.board.every((r) => r.every((c) => c !== null));
 
     if (winner || draw) {
-      // Marquer terminée SANS supprimer → permet la revanche
+      // ← Envoyer d'abord le coup à l'adversaire pour qu'il voie le dernier jeton
+      const other = game.players.find((p) => p.id !== socket.id);
+      if (other) socket.to(other.id).emit("p4-move", { col });
+
       game.status = "finished";
       io.to(room).emit("p4-game-over", {
         winner: winner || null,
         isDraw: draw,
         board: game.board,
       });
-      console.log(`🏆 P4 END : room ${room} — gagnant : ${winner || "nul"}`);
       return;
     }
 
