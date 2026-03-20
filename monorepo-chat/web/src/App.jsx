@@ -4,9 +4,7 @@ import GamePage from "./GamePage";
 import MemoryBoard from "./games/memory/memoryBoard";
 import Puissance4Board from "./games/puissance4/puissance4Board";
 
-const socket = io("https://chat-api-eepo.onrender.com", {
-  transports: ["websocket"],
-});
+const socket = io("https://chat-api-eepo.onrender.com", { transports: ["websocket"] });
 
 function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -32,16 +30,11 @@ function App() {
     socket.on("typing", ({ pseudo }) => setUserTyping(pseudo));
     socket.on("stopTyping", () => setUserTyping(null));
     return () => {
-      socket.off("message");
-      socket.off("system");
-      socket.off("typing");
-      socket.off("stopTyping");
+      socket.off("message"); socket.off("system"); socket.off("typing"); socket.off("stopTyping");
     };
   }, []);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const handleJoin = (e) => {
     e.preventDefault();
@@ -76,22 +69,12 @@ function App() {
           <h1 className="join__title">Rejoindre une room</h1>
           {errorMessage && <div className="join__error">{errorMessage}</div>}
           <form className="join__form" onSubmit={handleJoin}>
-            <input
-              className="join__input"
-              placeholder="Pseudo"
-              value={pseudo}
-              onChange={(e) => setPseudo(e.target.value)}
-            />
+            <input className="join__input" placeholder="Pseudo" value={pseudo} onChange={(e) => setPseudo(e.target.value)} />
             <div className="join__rooms">
               {rooms.map((r) => (
-                <button
-                  key={r}
-                  type="button"
+                <button key={r} type="button"
                   className={`join__room-btn ${room === r ? "join__room-btn--active" : ""}`}
-                  onClick={() => setRoom(r)}
-                >
-                  {r}
-                </button>
+                  onClick={() => setRoom(r)}>{r}</button>
               ))}
             </div>
             <button className="join__btn" type="submit" disabled={!room}>Entrer</button>
@@ -106,15 +89,18 @@ function App() {
     return (
       <div className="join">
         <div className="join__card">
+          {/* Bouton retour */}
+          <button
+            onClick={() => setJoined(false)}
+            style={{ alignSelf: "flex-start", background: "none", border: "1px solid #d1d5db", borderRadius: "0.375rem", padding: "0.375rem 0.75rem", fontSize: "0.875rem", color: "#6b7280", cursor: "pointer", marginBottom: "1rem" }}
+          >
+            ← Retour
+          </button>
           <h1 className="join__title">🔴🟡 Puissance 4</h1>
           <p style={{ color: "#6b7280", marginBottom: "1.5rem", textAlign: "center" }}>
             Crée une partie ou rejoins celle d'un ami.
           </p>
-          <button
-            className="join__btn"
-            style={{ marginBottom: "1.5rem" }}
-            onClick={() => setP4Room(generateCode())}
-          >
+          <button className="join__btn" style={{ marginBottom: "1.5rem" }} onClick={() => setP4Room(generateCode())}>
             Créer une partie
           </button>
           <div style={{ color: "#9ca3af", textAlign: "center", marginBottom: "1rem" }}>— ou —</div>
@@ -126,12 +112,9 @@ function App() {
               onChange={(e) => setP4CodeInput(e.target.value.toUpperCase())}
               style={{ flex: 1, marginBottom: 0 }}
             />
-            <button
-              className="join__btn"
-              style={{ flexShrink: 0 }}
+            <button className="join__btn" style={{ flexShrink: 0 }}
               disabled={p4CodeInput.length < 6}
-              onClick={() => setP4Room(p4CodeInput.trim())}
-            >
+              onClick={() => setP4Room(p4CodeInput.trim())}>
               Rejoindre
             </button>
           </div>
@@ -166,10 +149,7 @@ function App() {
               m.pseudo === "SYSTEM" ? (
                 <div key={i} className="messages__item messages__item--system">{m.content}</div>
               ) : (
-                <div
-                  key={i}
-                  className={`messages__item ${m.pseudo === pseudo ? "messages__item--me" : "messages__item--other"}`}
-                >
+                <div key={i} className={`messages__item ${m.pseudo === pseudo ? "messages__item--me" : "messages__item--other"}`}>
                   <span className="messages__author">{m.pseudo}</span>
                   <p className="messages__text">{m.content}</p>
                 </div>
@@ -177,16 +157,9 @@ function App() {
             )}
             <div ref={messagesEndRef} />
           </div>
-          {userTyping && userTyping !== pseudo && (
-            <div className="chat__typing">{userTyping} écrit…</div>
-          )}
+          {userTyping && userTyping !== pseudo && <div className="chat__typing">{userTyping} écrit…</div>}
           <form className="input-bar" onSubmit={handleSend}>
-            <input
-              className="input-bar__field"
-              placeholder="Votre message"
-              value={message}
-              onChange={handleTyping}
-            />
+            <input className="input-bar__field" placeholder="Votre message" value={message} onChange={handleTyping} />
             <button className="input-bar__btn" type="submit">Envoyer</button>
           </form>
         </main>
@@ -194,9 +167,7 @@ function App() {
     </div>
   );
 
-  if (gameComponent) {
-    return <GamePage game={gameComponent}>{chatContent}</GamePage>;
-  }
+  if (gameComponent) return <GamePage game={gameComponent}>{chatContent}</GamePage>;
   return chatContent;
 }
 

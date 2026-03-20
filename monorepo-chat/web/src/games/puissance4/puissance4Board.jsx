@@ -8,13 +8,9 @@ function saveScore(pseudo, won) {
   try {
     const scores = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
     const existing = scores.find((s) => s.pseudo === pseudo);
-    if (existing) {
-      if (won) existing.wins++; else existing.losses++;
-    } else {
-      scores.push({ pseudo, wins: won ? 1 : 0, losses: won ? 0 : 1 });
-    }
-    const sorted = scores.sort((a, b) => b.wins - a.wins).slice(0, 3);
-    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(sorted));
+    if (existing) { if (won) existing.wins++; else existing.losses++; }
+    else scores.push({ pseudo, wins: won ? 1 : 0, losses: won ? 0 : 1 });
+    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(scores.sort((a, b) => b.wins - a.wins).slice(0, 3)));
   } catch {}
 }
 
@@ -25,7 +21,7 @@ function getLeaderboard() {
 
 export default function Puissance4Board({ socket, room, pseudo, onBack }) {
   const [game, setGame] = useState(() => createGame());
-  const [winner, setWinner] = useState(null);       // 1 ou 2
+  const [winner, setWinner] = useState(null);
   const [isDrawn, setIsDrawn] = useState(false);
   const [winningCells, setWinningCells] = useState(new Set());
   const [playerNumber, setPlayerNumber] = useState(null);
@@ -37,7 +33,6 @@ export default function Puissance4Board({ socket, room, pseudo, onBack }) {
 
   useEffect(() => {
     if (!socket) return;
-
     socket.emit("p4-join", { room, pseudo });
 
     socket.on("p4-player-assigned", ({ playerNum, opponent: oppName }) => {
@@ -58,19 +53,23 @@ export default function Puissance4Board({ socket, room, pseudo, onBack }) {
 
     socket.on("p4-opponent-left", () => setOpponentLeft(true));
 
-    socket.on("p4-restart-ack", () => {
+    // ← FIX : restart-ack inclut playerNum et opponent pour resync complet
+    socket.on("p4-restart-ack", ({ playerNum, opponent: oppName }) => {
       setGame(createGame());
       setWinner(null);
       setIsDrawn(false);
       setWinningCells(new Set());
+      setPlayerNumber(playerNum);
+      setOpponent(oppName);
+      setWaiting(false);
+      setOpponentLeft(false);
     });
 
     socket.on("p4-game-over", ({ winner: w, isDraw: d, board }) => {
       if (w) {
         setWinner(w);
         setWinningCells(findWinningCells(board));
-        const iWon = w === playerNumber;
-        saveScore(pseudo, iWon);
+        saveScore(pseudo, w === playerNumber);
         setLeaderboard(getLeaderboard());
       } else if (d) {
         setIsDrawn(true);
@@ -85,13 +84,12 @@ export default function Puissance4Board({ socket, room, pseudo, onBack }) {
       socket.off("p4-restart-ack");
       socket.off("p4-game-over");
     };
-  }, [socket, room, pseudo, playerNumber]);
+  }, [socket, room, pseudo]);
 
   function handleColumnClick(col) {
     if (winner || isDrawn || waiting || opponentLeft || !playerNumber) return;
     if (game.currentPlayer !== playerNumber) return;
     if (game.board[0][col] !== null) return;
-
     const newGame = dropPiece(game, col);
     if (newGame !== game) {
       setGame(newGame);
@@ -100,11 +98,8 @@ export default function Puissance4Board({ socket, room, pseudo, onBack }) {
   }
 
   function startNewGame() {
-    setGame(createGame());
-    setWinner(null);
-    setIsDrawn(false);
-    setWinningCells(new Set());
     socket?.emit("p4-restart", { room });
+    // Ne pas reset localement — attendre le p4-restart-ack du serveur
   }
 
   const isMyTurn = !winner && !isDrawn && !waiting && !opponentLeft
@@ -113,22 +108,15 @@ export default function Puissance4Board({ socket, room, pseudo, onBack }) {
 
   const myColor = playerNumber === 1 ? "player-1" : "player-2";
 
-  // Message de fin
-  const iWon = winner === playerNumber;
-  const winnerPseudo = winner === playerNumber ? pseudo : opponent;
-
   return (
     <div className="puissance4-container">
       <div className="puissance4-header">
         <button className="puissance4-back-btn" onClick={onBack}>← Retour</button>
         <h1 className="puissance4-title">Puissance 4</h1>
-        <div className="puissance4-room-code">
-          Code : <strong>{room}</strong>
-        </div>
+        <div className="puissance4-room-code">Code : <strong>{room}</strong></div>
       </div>
 
       <div className="puissance4-main">
-        {/* Plateau + contrôles */}
         <div className="puissance4-left">
           {/* Statut */}
           <div className="puissance4-controls">
@@ -141,7 +129,9 @@ export default function Puissance4Board({ socket, room, pseudo, onBack }) {
                 <span className="puissance4-status__info">📡 Connexion...</span>
               ) : winner ? (
                 <span className={`puissance4-status__winner player-${winner}`}>
-                  {iWon ? `🏆 ${pseudo}, tu as gagné !` : `😔 ${pseudo}, tu as perdu.`}
+                  {winner === playerNumber
+                    ? `🏆 ${pseudo}, tu as gagné !`
+                    : `😔 ${pseudo}, tu as perdu.`}
                 </span>
               ) : isDrawn ? (
                 <span className="puissance4-status__draw">🤝 Égalité !</span>
@@ -218,9 +208,7 @@ export default function Puissance4Board({ socket, room, pseudo, onBack }) {
               <div key={i} className="puissance4-leaderboard__item">
                 <span className="puissance4-leaderboard__medal">{["🥇", "🥈", "🥉"][i]}</span>
                 <span className="puissance4-leaderboard__name">{s.pseudo}</span>
-                <span className="puissance4-leaderboard__score">
-                  {s.wins}V · {s.losses}D
-                </span>
+                <span className="puissance4-leaderboard__score">{s.wins}V · {s.losses}D</span>
               </div>
             ))}
           </div>
