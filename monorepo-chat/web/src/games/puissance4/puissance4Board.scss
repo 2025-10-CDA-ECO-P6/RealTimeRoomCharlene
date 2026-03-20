@@ -89,22 +89,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.puissance4-drop-zone {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.puissance4-drop-btn {
-  width: 60px;
-  height: 40px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: opacity 200ms;
-  border-radius: 0.25rem;
-
   &:hover:not(:disabled) {
     opacity: 0.3;
     background: rgba(255, 255, 255, 0.1);
