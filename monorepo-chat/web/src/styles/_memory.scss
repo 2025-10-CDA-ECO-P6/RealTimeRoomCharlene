@@ -1,49 +1,189 @@
-// Styles pour le jeu Memory
+// ============================================================
+// MEMORY — Styles
+// ============================================================
 
-.memory-card {
-  width: 80px;
-  height: 80px;
-  font-size: 2rem;
-  border-radius: 12px;
-  border: 2.5px solid;
+.memory-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  width: 100%;
+}
+
+// ── Header (même style que Puissance 4) ─────────────────────
+
+.memory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.memory-back-btn {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  color: #6b7280;
   cursor: pointer;
-  transition: all 300ms ease;
+  transition: all 200ms;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+}
+
+.memory-title {
+  font-size: 1.875rem;
   font-weight: bold;
-  background-color: #06b6d4; // cyan-500
+  color: #1f2937;
+  text-align: center;
+  margin: 0;
+}
 
-  &:hover:not(:disabled) {
-    background-color: #22d3ee; // cyan-400
-  }
+.memory-room-code {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-family: monospace;
+  letter-spacing: 0.05em;
+  background: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+}
 
-  &:disabled {
-    cursor: default;
-  }
+// ── Contrôles ────────────────────────────────────────────────
 
-  // Carte non retournée (fermée)
-  &--closed {
-    background-color: #06b6d4;
-    border-color: #0891b2;
-    color: transparent;
+.memory-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
 
-    &:hover:not(:disabled) {
-      background-color: #22d3ee;
+.memory-status {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  text-align: center;
+  min-height: 1.5rem;
+}
+
+.memory-turn--mine {
+  color: #0891b2;
+  font-weight: 700;
+}
+
+.memory-turn--other {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.memory-stats {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.memory-stat {
+  strong { font-weight: 700; color: #1f2937; }
+}
+
+.memory-btn {
+  background-color: #06b6d4;
+  color: white;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.375rem;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 200ms;
+
+  &:hover { background-color: #0891b2; }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+// ── Scoreboard multijoueur ───────────────────────────────────
+
+.memory-scoreboard {
+  display: flex;
+  gap: 1rem;
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    min-width: 90px;
+    transition: all 200ms;
+
+    &--active {
+      border-color: #06b6d4;
+      background: #ecfeff;
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
     }
   }
 
-  // Carte retournée (ouverte)
-  &--open {
-    background-color: #ffffff;
-    border-color: #06b6d4;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  &__name {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
   }
 
-  // Carte trouvée (matched)
-  &--matched {
-    background-color: #dcfce7;
-    border-color: #4ade80;
-    cursor: default;
+  &__score {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 }
+
+// ── Victoire ─────────────────────────────────────────────────
+
+.memory-victory {
+  background-color: #dcfce7;
+  border: 1px solid #4ade80;
+  color: #15803d;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+
+  strong { font-weight: 600; }
+}
+
+// ── Layout contenu ───────────────────────────────────────────
+
+.memory-content {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+// ── Plateau ──────────────────────────────────────────────────
 
 .memory-board {
   display: grid;
@@ -55,38 +195,42 @@
   max-width: fit-content;
 }
 
-.memory-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  color: #4b5563;
+// ── Cartes ───────────────────────────────────────────────────
 
-  strong {
-    font-weight: 600;
-  }
-}
-
-.memory-title {
-  font-size: 1.875rem;
+.memory-card {
+  width: 80px;
+  height: 80px;
+  font-size: 2rem;
+  border-radius: 12px;
+  border: 2.5px solid;
+  cursor: pointer;
+  transition: all 300ms ease;
   font-weight: bold;
-  color: #1f2937;
-  text-align: center;
-}
 
-.memory-victory {
-  background-color: #dcfce7;
-  border: 1px solid #4ade80;
-  color: #15803d;
-  padding: 1.5rem;
-  border-radius: 8px;
-  text-align: center;
+  &:disabled { cursor: default; }
 
-  strong {
-    font-weight: 600;
+  &--closed {
+    background-color: #06b6d4;
+    border-color: #0891b2;
+    color: transparent;
+
+    &:hover:not(:disabled) { background-color: #22d3ee; }
+  }
+
+  &--open {
+    background-color: #ffffff;
+    border-color: #06b6d4;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  &--matched {
+    background-color: #dcfce7;
+    border-color: #4ade80;
+    cursor: default;
   }
 }
+
+// ── Palmarès solo ────────────────────────────────────────────
 
 .memory-leaderboard {
   width: 208px;
@@ -109,9 +253,7 @@
     padding: 0.5rem 0.75rem;
     border-bottom: 1px solid #f3f4f6;
 
-    &:last-child {
-      border-bottom: none;
-    }
+    &:last-child { border-bottom: none; }
 
     .item-player {
       display: flex;
@@ -120,9 +262,6 @@
       font-weight: 600;
       font-size: 0.875rem;
       color: #1f2937;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .item-stats {
@@ -130,74 +269,5 @@
       color: #6b7280;
       margin-left: 1.5rem;
     }
-  }
-}
-
-// ── À AJOUTER À LA FIN DE memoryBoard.scss ──────────────────
-
-.memory-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  width: 100%;
-  margin-bottom: 0.5rem;
-}
-
-.memory-back-btn {
-  background: none;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 200ms;
-
-  &:hover {
-    background: #f3f4f6;
-    color: #1f2937;
-  }
-}
-
-.memory-room-code {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-family: monospace;
-  background: #f3f4f6;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-}
-
-.memory-turn--mine {
-  color: #0891b2;
-  font-weight: 700;
-}
-
-.memory-turn--other {
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.memory-scores {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.875rem;
-}
-
-.memory-score {
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-
-  &--me {
-    background: #e0f2fe;
-    color: #0369a1;
-  }
-
-  &--opp {
-    background: #fef9c3;
-    color: #854d0e;
   }
 }

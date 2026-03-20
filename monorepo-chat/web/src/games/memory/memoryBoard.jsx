@@ -25,8 +25,22 @@ function saveScore(newScore) {
   return updated;
 }
 
+// ── HEADER COMMUN (même style que Puissance 4) ───────────────
+function MemoryHeader({ onBack, roomCode }) {
+  return (
+    <div className="memory-header">
+      <button className="memory-back-btn" onClick={onBack}>← Retour</button>
+      <h1 className="memory-title">Memory Game</h1>
+      {roomCode
+        ? <div className="memory-room-code">Code : <strong>{roomCode}</strong></div>
+        : <div style={{ width: "80px" }} /> /* spacer pour centrer le titre */
+      }
+    </div>
+  );
+}
+
 // ── MODE SOLO ────────────────────────────────────────────────
-function MemorySolo({ pseudo }) {
+function MemorySolo({ pseudo, onBack }) {
   const [board, setBoard] = useState([]);
   const [flipped, setFlipped] = useState([]);
   const [moves, setMoves] = useState(0);
@@ -82,7 +96,7 @@ function MemorySolo({ pseudo }) {
           stopTimer();
           setWon(true);
           const updated = saveScore({
-            pseudo: pseudo.trim() || "Anonyme",
+            pseudo: pseudo || "Anonyme",
             moves: moves + 1,
             time,
             date: new Date().toLocaleDateString("fr-FR"),
@@ -97,16 +111,21 @@ function MemorySolo({ pseudo }) {
 
   return (
     <div className="memory-container">
-      <h1 className="memory-title">Memory Game</h1>
+      <MemoryHeader onBack={onBack} />
+
+      {/* Contrôles */}
       <div className="memory-controls">
-        <span>Coups : <strong>{moves}</strong></span>
-        <span>⏱️ <strong>{formatTime(time)}</strong></span>
+        <div className="memory-stats">
+          <span className="memory-stat">🎯 <strong>{moves}</strong> coups</span>
+          <span className="memory-stat">⏱️ <strong>{formatTime(time)}</strong></span>
+        </div>
         <button onClick={startGame} className="memory-btn">Nouvelle partie</button>
       </div>
 
       {won && (
         <div className="memory-victory">
-          🎉 Bravo <strong>{pseudo || "Anonyme"}</strong> ! {moves} coups en {formatTime(time)} !
+          🎉 Bravo <strong>{pseudo || "Anonyme"}</strong> !{" "}
+          {moves} coups en {formatTime(time)} !
         </div>
       )}
 
@@ -120,12 +139,16 @@ function MemorySolo({ pseudo }) {
             </button>
           ))}
         </div>
+
         {leaderboard.length > 0 && (
           <div className="memory-leaderboard">
             <h2>🏆 Palmarès</h2>
             {leaderboard.map((s, i) => (
               <div key={i} className="leaderboard-item">
-                <div className="item-player"><span>{["🥇", "🥈", "🥉"][i]}</span><span>{s.pseudo}</span></div>
+                <div className="item-player">
+                  <span>{["🥇", "🥈", "🥉"][i]}</span>
+                  <span>{s.pseudo}</span>
+                </div>
                 <div className="item-stats">{s.moves} coups · {formatTime(s.time)} · {s.date}</div>
               </div>
             ))}
@@ -145,7 +168,7 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
   const [scores, setScores] = useState({ 1: 0, 2: 0 });
   const [waiting, setWaiting] = useState(false);
   const [opponentLeft, setOpponentLeft] = useState(false);
-  const [gameOver, setGameOver] = useState(null); // { scores, winner }
+  const [gameOver, setGameOver] = useState(null);
   const [locked, setLocked] = useState(false);
 
   const isMyTurn = playerNum !== null && currentPlayer === playerNum;
@@ -156,8 +179,8 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
 
     socket.on("mem-waiting", () => setWaiting(true));
 
-    socket.on("mem-start", ({ board, playerNum: pNum, opponent: opp, currentPlayer: cp, scores: sc }) => {
-      setBoard(board);
+    socket.on("mem-start", ({ board: b, playerNum: pNum, opponent: opp, currentPlayer: cp, scores: sc }) => {
+      setBoard(b);
       setPlayerNum(pNum);
       setOpponent(opp);
       setCurrentPlayer(cp);
@@ -195,8 +218,8 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
       setGameOver({ scores: sc, winner });
     });
 
-    socket.on("mem-restart-ack", ({ board, playerNum: pNum, opponent: opp, currentPlayer: cp, scores: sc }) => {
-      setBoard(board);
+    socket.on("mem-restart-ack", ({ board: b, playerNum: pNum, opponent: opp, currentPlayer: cp, scores: sc }) => {
+      setBoard(b);
       setPlayerNum(pNum);
       setOpponent(opp);
       setCurrentPlayer(cp);
@@ -223,17 +246,10 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
     if (!isMyTurn || locked || gameOver || opponentLeft) return;
     const card = board.find((c) => c.id === cardId);
     if (!card || card.isFlipped || card.isMatched) return;
-
-    // Compter les cartes déjà retournées (non matchées)
     const flippedCount = board.filter((c) => c.isFlipped && !c.isMatched).length;
     if (flippedCount >= 2) return;
-    if (flippedCount === 1) setLocked(true); // bloquer après 2ème carte
-
+    if (flippedCount === 1) setLocked(true);
     socket.emit("mem-flip", { room, cardId });
-  }
-
-  function handleRestart() {
-    socket.emit("mem-restart", { room });
   }
 
   const myScore = scores[playerNum] ?? 0;
@@ -241,43 +257,51 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
 
   return (
     <div className="memory-container">
-      {/* Header */}
-      <div className="memory-header">
-        <button className="memory-back-btn" onClick={onBack}>← Retour</button>
-        <h1 className="memory-title">Memory Game</h1>
-        <div className="memory-room-code">Code : <strong>{room}</strong></div>
-      </div>
+      <MemoryHeader onBack={onBack} roomCode={room} />
 
-      {/* Statut */}
+      {/* Statut + scores */}
       <div className="memory-controls">
-        {opponentLeft ? (
-          <span style={{ color: "#d97706" }}>⚠️ Adversaire déconnecté</span>
-        ) : waiting ? (
-          <span style={{ color: "#6b7280" }}>⏳ En attente d'un adversaire...</span>
-        ) : gameOver ? (
-          <span style={{ fontWeight: "bold" }}>
-            {gameOver.winner === null
-              ? "🤝 Égalité !"
-              : gameOver.winner === playerNum
-              ? `🏆 ${pseudo}, tu as gagné !`
-              : `😔 ${pseudo}, tu as perdu.`}
-          </span>
-        ) : (
-          <span className={isMyTurn ? "memory-turn--mine" : "memory-turn--other"}>
-            {isMyTurn ? "À toi de jouer ! 👉" : `Tour de ${opponent || "l'adversaire"}... ⏱️`}
-          </span>
-        )}
+        {/* Message de statut */}
+        <div className="memory-status">
+          {opponentLeft ? (
+            <span style={{ color: "#d97706" }}>⚠️ Adversaire déconnecté</span>
+          ) : waiting ? (
+            <span style={{ color: "#6b7280" }}>⏳ En attente d'un adversaire...</span>
+          ) : gameOver ? (
+            <span style={{ fontWeight: "bold" }}>
+              {gameOver.winner === null
+                ? "🤝 Égalité !"
+                : gameOver.winner === playerNum
+                ? `🏆 ${pseudo}, tu as gagné !`
+                : `😔 ${pseudo}, tu as perdu.`}
+            </span>
+          ) : (
+            <span className={isMyTurn ? "memory-turn--mine" : "memory-turn--other"}>
+              {isMyTurn ? "À toi de jouer ! 👉" : `Tour de ${opponent || "l'adversaire"}... ⏱️`}
+            </span>
+          )}
+        </div>
 
-        {/* Scores */}
-        {playerNum && (
-          <div className="memory-scores">
-            <span className="memory-score memory-score--me">{pseudo} : {myScore}</span>
-            <span className="memory-score memory-score--opp">{opponent || "?"} : {oppScore}</span>
+        {/* Scores — deux cartes côte à côte */}
+        {playerNum && !waiting && (
+          <div className="memory-scoreboard">
+            <div className={`memory-scoreboard__card ${currentPlayer === playerNum ? "memory-scoreboard__card--active" : ""}`}>
+              <span className="memory-scoreboard__name">🧑 {pseudo}</span>
+              <span className="memory-scoreboard__score">{myScore}</span>
+              <span className="memory-scoreboard__label">paires</span>
+            </div>
+            <div className={`memory-scoreboard__card ${currentPlayer !== playerNum ? "memory-scoreboard__card--active" : ""}`}>
+              <span className="memory-scoreboard__name">👤 {opponent || "?"}</span>
+              <span className="memory-scoreboard__score">{oppScore}</span>
+              <span className="memory-scoreboard__label">paires</span>
+            </div>
           </div>
         )}
 
         {gameOver && (
-          <button onClick={handleRestart} className="memory-btn">Nouvelle partie</button>
+          <button onClick={() => socket.emit("mem-restart", { room })} className="memory-btn">
+            Nouvelle partie
+          </button>
         )}
       </div>
 
@@ -285,16 +309,9 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
       {board.length > 0 && (
         <div className="memory-board">
           {board.map((card) => (
-            <button
-              key={card.id}
-              onClick={() => handleCardClick(card.id)}
+            <button key={card.id} onClick={() => handleCardClick(card.id)}
               disabled={card.isMatched || card.isFlipped || !isMyTurn || locked || !!gameOver}
-              className={`memory-card ${
-                card.isMatched ? "memory-card--matched"
-                : card.isFlipped ? "memory-card--open"
-                : "memory-card--closed"
-              }`}
-            >
+              className={`memory-card ${card.isMatched ? "memory-card--matched" : card.isFlipped ? "memory-card--open" : "memory-card--closed"}`}>
               {card.isFlipped || card.isMatched ? card.symbol : ""}
             </button>
           ))}
@@ -304,10 +321,10 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
   );
 }
 
-// ── EXPORT PRINCIPAL ─────────────────────────────────────────
+// ── EXPORT ───────────────────────────────────────────────────
 export default function MemoryBoard({ pseudo, socket, room, onBack, multiplayer }) {
   if (multiplayer && socket && room) {
     return <MemoryMulti socket={socket} room={room} pseudo={pseudo} onBack={onBack} />;
   }
-  return <MemorySolo pseudo={pseudo} />;
+  return <MemorySolo pseudo={pseudo} onBack={onBack} />;
 }
