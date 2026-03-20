@@ -17,13 +17,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  flex-wrap: wrap;
+  align-self: stretch;
+  flex-wrap: nowrap;
   gap: 0.5rem;
-
-  &__spacer {
-    width: 80px; // même largeur que le bouton retour pour centrer le titre
-  }
 }
 
 .memory-back-btn {

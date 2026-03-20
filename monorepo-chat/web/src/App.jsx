@@ -10,6 +10,19 @@ function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+// Style partagé pour les boutons retour des lobbies
+const backBtnStyle = {
+  alignSelf: "flex-start",
+  background: "none",
+  border: "1px solid #d1d5db",
+  borderRadius: "0.375rem",
+  padding: "0.375rem 0.75rem",
+  fontSize: "0.875rem",
+  color: "#6b7280",
+  cursor: "pointer",
+  marginBottom: "1rem",
+};
+
 function App() {
   const [pseudo, setPseudo] = useState("");
   const [room, setRoom] = useState("");
@@ -97,26 +110,23 @@ function App() {
       <div className="join">
         <div className="join__card">
           <button onClick={() => setJoined(false)} style={backBtnStyle}>← Retour</button>
-          <h1 className="join__title">🃏 Memory</h1>
+          <h1 className="join__title">Memory</h1>
           <p style={{ color: "#374151", marginBottom: "1.5rem", textAlign: "center" }}>
             Tu joues en tant que <strong>{pseudo}</strong>
           </p>
 
-          {/* Solo */}
           <button className="join__btn" style={{ marginBottom: "0.75rem" }}
             onClick={() => setMemMode("solo")}>
-            🎮 Jouer en solo
+            Jouer en solo
           </button>
 
           <div style={{ color: "#9ca3af", textAlign: "center", margin: "0.75rem 0" }}>— ou multijoueur —</div>
 
-          {/* Créer multi */}
           <button className="join__btn" style={{ marginBottom: "1rem", background: "#0891b2" }}
             onClick={() => { setMemMode("multi"); setMemRoom(generateCode()); }}>
             Créer une partie multijoueur
           </button>
 
-          {/* Rejoindre multi */}
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input className="join__input" placeholder="Code de la partie"
               value={memCodeInput}
@@ -139,7 +149,7 @@ function App() {
       <div className="join">
         <div className="join__card">
           <button onClick={() => setJoined(false)} style={backBtnStyle}>← Retour</button>
-          <h1 className="join__title">🔴🟡 Puissance 4</h1>
+          <h1 className="join__title">Puissance 4</h1>
           <p style={{ color: "#374151", marginBottom: "1.5rem", textAlign: "center" }}>
             Tu joues en tant que <strong>{pseudo}</strong>
           </p>
@@ -231,18 +241,5 @@ function App() {
   if (gameComponent) return <GamePage game={gameComponent}>{chatContent}</GamePage>;
   return chatContent;
 }
-
-// Style partagé pour les boutons retour
-const backBtnStyle = {
-  alignSelf: "flex-start",
-  background: "none",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.375rem",
-  padding: "0.375rem 0.75rem",
-  fontSize: "0.875rem",
-  color: "#6b7280",
-  cursor: "pointer",
-  marginBottom: "1rem",
-};
 
 export default App;
