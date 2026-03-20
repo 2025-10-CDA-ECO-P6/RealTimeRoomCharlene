@@ -14,32 +14,19 @@ import { Server } from "socket.io";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Sécurité
 app.use(helmet());
-
-// Rate limiting : max 100 requêtes par 15 min par IP
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
   max: 100,
   message: "Trop de requêtes, veuillez réessayer plus tard.",
   standardHeaders: true,
   legacyHeaders: false,
-});
-app.use(limiter);
-
+}));
 app.use(cors());
 app.use(express.json());
 
-// Routes API simples
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
-
-app.get("/", (_req, res) => {
-  res.send("API OK");
-});
-
-console.log(">>> API CHARGÉE <<<");
+app.get("/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+app.get("/", (_req, res) => res.send("API OK"));
 
 // ============================================================
 // SERVEUR HTTP + SOCKET.IO
@@ -47,59 +34,47 @@ console.log(">>> API CHARGÉE <<<");
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+  cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
 // ============================================================
 // ÉTAT GLOBAL
 // ============================================================
 let connectedUsers = 0;
-const games = new Map(); // roomId → état Puissance 4
+const p4Games = new Map(); // room → { players, board, currentPlayer }
 
 // ============================================================
-// VALIDATION UTILS
+// VALIDATION
 // ============================================================
-function validatePseudo(pseudo) {
+const validatePseudo = (pseudo) => {
   if (!pseudo || typeof pseudo !== "string") return false;
-  const trimmed = pseudo.trim();
-  if (trimmed.length < 2 || trimmed.length > 20) return false;
-  return /^[a-zA-Z0-9_\-àâäéèêëïîôùûüœæçÀÂÄÉÈÊËÏÎÔÙÛÜŒÆÇ ]+$/.test(trimmed);
-}
+  const t = pseudo.trim();
+  return t.length >= 2 && t.length <= 20 &&
+    /^[a-zA-Z0-9_\-àâäéèêëïîôùûüœæçÀÂÄÉÈÊËÏÎÔÙÛÜŒÆÇ ]+$/.test(t);
+};
 
-function validateRoom(room) {
+const validateRoom = (room) => {
   if (!room || typeof room !== "string") return false;
-  const trimmed = room.trim();
-  if (trimmed.length < 2 || trimmed.length > 50) return false;
-  return /^[a-zA-Z0-9 \-àâäéèêëïîôùûüœæçÀÂÄÉÈÊËÏÎÔÙÛÜŒÆÇ]+$/.test(trimmed);
-}
+  const t = room.trim();
+  return t.length >= 2 && t.length <= 50 &&
+    /^[a-zA-Z0-9 \-àâäéèêëïîôùûüœæçÀÂÄÉÈÊËÏÎÔÙÛÜŒÆÇ]+$/.test(t);
+};
 
-function validateMessage(content) {
+const validateMessage = (content) => {
   if (!content || typeof content !== "string") return false;
-  const trimmed = content.trim();
-  if (trimmed.length < 1 || trimmed.length > 500) return false;
-  return true;
-}
+  const t = content.trim();
+  return t.length >= 1 && t.length <= 500;
+};
 
 // ============================================================
-// UTILITAIRES — FORMATAGE DES MESSAGES
+// UTILITAIRES — CHAT
 // ============================================================
 const formatMessage = (message) => {
   const now = new Date();
   return {
     text: message,
-    time: now.toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }),
-    date: now.toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }),
+    time: now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+    date: now.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }),
     timestamp: now,
   };
 };
@@ -107,64 +82,38 @@ const formatMessage = (message) => {
 // ============================================================
 // UTILITAIRES — PUISSANCE 4
 // ============================================================
+const createBoard = () => Array.from({ length: 6 }, () => Array(7).fill(null));
+
 const checkWinner = (board) => {
   // Horizontal
   for (let row = 0; row < 6; row++)
     for (let col = 0; col < 4; col++) {
       const cell = board[row][col];
-      if (
-        cell &&
-        cell === board[row][col + 1] &&
-        cell === board[row][col + 2] &&
-        cell === board[row][col + 3]
-      )
-        return cell;
+      if (cell && cell === board[row][col+1] && cell === board[row][col+2] && cell === board[row][col+3]) return cell;
     }
-
   // Vertical
   for (let row = 0; row < 3; row++)
     for (let col = 0; col < 7; col++) {
       const cell = board[row][col];
-      if (
-        cell &&
-        cell === board[row + 1][col] &&
-        cell === board[row + 2][col] &&
-        cell === board[row + 3][col]
-      )
-        return cell;
+      if (cell && cell === board[row+1][col] && cell === board[row+2][col] && cell === board[row+3][col]) return cell;
     }
-
   // Diagonale ↘
   for (let row = 0; row < 3; row++)
     for (let col = 0; col < 4; col++) {
       const cell = board[row][col];
-      if (
-        cell &&
-        cell === board[row + 1][col + 1] &&
-        cell === board[row + 2][col + 2] &&
-        cell === board[row + 3][col + 3]
-      )
-        return cell;
+      if (cell && cell === board[row+1][col+1] && cell === board[row+2][col+2] && cell === board[row+3][col+3]) return cell;
     }
-
   // Diagonale ↗
   for (let row = 3; row < 6; row++)
     for (let col = 0; col < 4; col++) {
       const cell = board[row][col];
-      if (
-        cell &&
-        cell === board[row - 1][col + 1] &&
-        cell === board[row - 2][col + 2] &&
-        cell === board[row - 3][col + 3]
-      )
-        return cell;
+      if (cell && cell === board[row-1][col+1] && cell === board[row-2][col+2] && cell === board[row-3][col+3]) return cell;
     }
-
   return null;
 };
 
 // ============================================================
-// SOCKET.IO — LOGIQUE TEMPS RÉEL
+// SOCKET.IO
 // ============================================================
 io.on("connection", (socket) => {
   console.log("Client connecté :", socket.id);
@@ -172,24 +121,18 @@ io.on("connection", (socket) => {
   io.emit("users count", connectedUsers);
 
   // ----------------------------------------------------------
-  // CHAT — ROOMS
+  // CHAT
   // ----------------------------------------------------------
   socket.on("join", ({ room, pseudo }) => {
-    console.log(`JOIN : ${pseudo} -> ${room}`);
-    if (!validateRoom(room) || !validatePseudo(pseudo)) {
+    if (!validateRoom(room) || !validatePseudo(pseudo))
       return socket.emit("error", "Pseudo ou room invalide");
-    }
-
     socket.join(room);
     socket.to(room).emit("system", `${pseudo.trim()} a rejoint la room`);
   });
 
   socket.on("message", ({ room, pseudo, content }) => {
-    if (!validateRoom(room) || !validatePseudo(pseudo) || !validateMessage(content)) {
+    if (!validateRoom(room) || !validatePseudo(pseudo) || !validateMessage(content))
       return socket.emit("error", "Message invalide");
-    }
-
-    console.log(`MESSAGE : ${pseudo} -> ${content}`);
     io.to(room).emit("message", {
       pseudo: pseudo.trim(),
       content: content.trim(),
@@ -208,157 +151,51 @@ io.on("connection", (socket) => {
   });
 
   // ----------------------------------------------------------
-  // PUISSANCE 4 ROOM-BASÉ (MULTIJOUEUR)
+  // PUISSANCE 4
   // ----------------------------------------------------------
-  const p4Games = new Map(); // room → { players: [{ id, pseudo, playerNum }], board, currentPlayer }
-
   socket.on("p4-join", ({ room, pseudo }) => {
-    console.log(`P4 JOIN : ${pseudo} (${socket.id}) -> ${room}`);
     if (!room || !pseudo) return;
+    console.log(`P4 JOIN : ${pseudo} (${socket.id}) -> ${room}`);
 
     socket.join(room);
 
-    // Initialiser la game si elle n'existe pas
+    // Créer la room si elle n'existe pas
     if (!p4Games.has(room)) {
       p4Games.set(room, {
         players: [],
-        board: Array.from({ length: 6 }, () => Array(7).fill(null)),
+        board: createBoard(),
         currentPlayer: 1,
       });
     }
 
     const game = p4Games.get(room);
 
-    // Vérifier que le joueur n'est pas déjà dans la partie
-    if (game.players.some((p) => p.id === socket.id)) {
-      return;
-    }
+    // Joueur déjà dans la partie → ignorer
+    if (game.players.some((p) => p.id === socket.id)) return;
 
-    // Assigner le numéro de joueur
-    let playerNum;
+    // Trop de joueurs
+    if (game.players.length >= 2) return socket.emit("error", "Partie complète.");
+
     if (game.players.length === 0) {
-      playerNum = 1;
-      // Envoyer "waiting" au premier joueur
+      // Premier joueur → attente
+      game.players.push({ id: socket.id, pseudo, playerNum: 1 });
       socket.emit("p4-waiting");
-    } else if (game.players.length === 1) {
-      playerNum = 2;
-      // Assigner les deux joueurs
-      const opponent1 = game.players[0];
-      io.to(opponent1.id).emit("p4-player-assigned", {
-        playerNum: 1,
-        opponent: pseudo,
-      });
-      socket.emit("p4-player-assigned", { playerNum: 2, opponent: opponent1.pseudo });
     } else {
-      // Trop de joueurs, rejeter
-      return socket.emit("message", "P4: Partie complète");
-    }
+      // Deuxième joueur → la partie commence
+      const player1 = game.players[0];
+      game.players.push({ id: socket.id, pseudo, playerNum: 2 });
 
-    game.players.push({ id: socket.id, pseudo, playerNum });
+      io.to(player1.id).emit("p4-player-assigned", { playerNum: 1, opponent: pseudo });
+      socket.emit("p4-player-assigned", { playerNum: 2, opponent: player1.pseudo });
+    }
   });
 
   socket.on("p4-move", ({ room, col }) => {
-    if (!room || !p4Games.has(room)) return;
-
     const game = p4Games.get(room);
-    const player = game.players.find((p) => p.id === socket.id);
-    if (!player) return;
-
-    // Valider que c'est le tour du joueur
-    if (player.playerNum !== game.currentPlayer) return;
-
-    // Appliquer le coup
-    let placed = false;
-    for (let row = 5; row >= 0; row--) {
-      if (game.board[row][col] === null) {
-        game.board[row][col] = game.currentPlayer;
-        placed = true;
-        break;
-      }
-    }
-    if (!placed) return; // Colonne pleine
-
-    // Vérifier gagnant
-    const winner = checkWinner(game.board);
-    const isDraw = game.board.every((row) => row.every((cell) => cell !== null));
-
-    if (winner || isDraw) {
-      // Partie terminée
-      io.to(room).emit("p4-game-over", {
-        winner: winner || null,
-        isDraw,
-        board: game.board,
-      });
-      p4Games.delete(room);
-      return;
-    }
-
-    // Changer de joueur
-    game.currentPlayer = game.currentPlayer === 1 ? 2 : 1;
-
-    // Notifier l'autre joueur
-    const otherPlayer = game.players.find((p) => p.playerNum !== player.playerNum);
-    if (otherPlayer) {
-      socket.to(otherPlayer.id).emit("p4-move", { col });
-    }
-  });
-
-  socket.on("p4-restart", ({ room }) => {
-    if (!p4Games.has(room)) {
-      p4Games.set(room, {
-        players: p4Games.get(room)?.players || [],
-        board: Array.from({ length: 6 }, () => Array(7).fill(null)),
-        currentPlayer: 1,
-      });
-    } else {
-      const game = p4Games.get(room);
-      game.board = Array.from({ length: 6 }, () => Array(7).fill(null));
-      game.currentPlayer = 1;
-    }
-
-    io.to(room).emit("p4-restart-ack");
-  });
-
-  // ----------------------------------------------------------
-  // ANCIENNE PUISSANCE 4 (À GARDER POUR COMPATIBILITÉ)
-  // ----------------------------------------------------------
-  socket.on("create_game", () => {
-    const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-
-    socket.join(roomId);
-    games.set(roomId, {
-      board: Array.from({ length: 6 }, () => Array(7).fill(null)),
-      currentPlayer: 1,
-      players: [socket.id],
-    });
-
-    socket.emit("game_created", { roomId });
-    console.log(`Partie créée : ${roomId}`);
-  });
-
-  socket.on("join_game", (roomId) => {
-    const game = games.get(roomId);
-    if (!game) return socket.emit("join_error", "Partie introuvable.");
-    if (game.players.length >= 2)
-      return socket.emit("join_error", "Partie complète.");
-
-    socket.join(roomId);
-    game.players.push(socket.id);
-
-    io.to(roomId).emit("game_start", {
-      board: game.board,
-      currentPlayer: game.currentPlayer,
-    });
-
-    console.log(`Partie ${roomId} démarrée`);
-  });
-
-  socket.on("drop_piece", ({ roomId, col }) => {
-    const game = games.get(roomId);
     if (!game) return;
 
-    const playerIndex = game.players.indexOf(socket.id);
-    if (playerIndex + 1 !== game.currentPlayer) return;
+    const player = game.players.find((p) => p.id === socket.id);
+    if (!player || player.playerNum !== game.currentPlayer) return;
 
     // Gravité
     let placed = false;
@@ -372,34 +209,26 @@ io.on("connection", (socket) => {
     if (!placed) return;
 
     const winner = checkWinner(game.board);
-    const isDraw = game.board.every((row) => row.every((cell) => cell !== null));
+    const draw = game.board.every((row) => row.every((cell) => cell !== null));
 
-    if (winner) {
-      io.to(roomId).emit("game_over", {
-        winner,
-        reason: "win",
-        board: game.board,
-      });
-      games.delete(roomId);
+    if (winner || draw) {
+      io.to(room).emit("p4-game-over", { winner: winner || null, isDraw: draw, board: game.board });
+      p4Games.delete(room);
       return;
     }
 
-    if (isDraw) {
-      io.to(roomId).emit("game_over", {
-        winner: null,
-        reason: "draw",
-        board: game.board,
-      });
-      games.delete(roomId);
-      return;
-    }
-
+    // Changer de joueur et notifier l'adversaire
     game.currentPlayer = game.currentPlayer === 1 ? 2 : 1;
+    const other = game.players.find((p) => p.id !== socket.id);
+    if (other) socket.to(other.id).emit("p4-move", { col });
+  });
 
-    io.to(roomId).emit("game_update", {
-      board: game.board,
-      currentPlayer: game.currentPlayer,
-    });
+  socket.on("p4-restart", ({ room }) => {
+    const game = p4Games.get(room);
+    if (!game) return;
+    game.board = createBoard();
+    game.currentPlayer = 1;
+    io.to(room).emit("p4-restart-ack");
   });
 
   // ----------------------------------------------------------
@@ -410,35 +239,20 @@ io.on("connection", (socket) => {
     connectedUsers--;
     io.emit("users count", connectedUsers);
 
-    // P4 room-based: notifier l'adversaire
     for (const [room, game] of p4Games.entries()) {
-      const player = game.players.find((p) => p.id === socket.id);
-      if (player) {
-        const otherPlayer = game.players.find((p) => p.id !== socket.id);
-        if (otherPlayer) {
-          io.to(otherPlayer.id).emit("p4-opponent-left");
-        }
+      const idx = game.players.findIndex((p) => p.id === socket.id);
+      if (idx !== -1) {
+        const other = game.players.find((p) => p.id !== socket.id);
+        if (other) io.to(other.id).emit("p4-opponent-left");
         p4Games.delete(room);
         break;
-      }
-    }
-
-    // Ancienne logique P4 (compatibilité)
-    // Si un joueur quitte une partie en cours
-    for (const [roomId, game] of games.entries()) {
-      if (game.players.includes(socket.id)) {
-        io.to(roomId).emit("game_over", {
-          winner: null,
-          reason: "disconnect",
-        });
-        games.delete(roomId);
       }
     }
   });
 });
 
 // ============================================================
-// DÉMARRAGE SERVEUR
+// DÉMARRAGE
 // ============================================================
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`API + WebSocket running on port ${PORT}`);
