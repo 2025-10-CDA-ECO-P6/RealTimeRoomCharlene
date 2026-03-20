@@ -18,8 +18,13 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [userTyping, setUserTyping] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Lobbies
   const [p4Room, setP4Room] = useState(null);
   const [p4CodeInput, setP4CodeInput] = useState("");
+  const [memRoom, setMemRoom] = useState(null);
+  const [memCodeInput, setMemCodeInput] = useState("");
+  const [memMode, setMemMode] = useState(null); // "solo" | "multi"
 
   const messagesEndRef = useRef(null);
   const typingTimeout = useRef(null);
@@ -69,12 +74,8 @@ function App() {
           <h1 className="join__title">Rejoindre une room</h1>
           {errorMessage && <div className="join__error">{errorMessage}</div>}
           <form className="join__form" onSubmit={handleJoin}>
-            <input
-              className="join__input"
-              placeholder="Pseudo"
-              value={pseudo}
-              onChange={(e) => setPseudo(e.target.value)}
-            />
+            <input className="join__input" placeholder="Pseudo" value={pseudo}
+              onChange={(e) => setPseudo(e.target.value)} />
             <div className="join__rooms">
               {rooms.map((r) => (
                 <button key={r} type="button"
@@ -90,49 +91,71 @@ function App() {
     );
   }
 
-  // ── PAGE : Mini-lobby Puissance 4 ──────────────────────────
-  if (room === "Puissance 4" && !p4Room) {
+  // ── PAGE : Lobby Memory ────────────────────────────────────
+  if (room === "Memory" && !memMode) {
     return (
       <div className="join">
         <div className="join__card">
-          <button
-            onClick={() => setJoined(false)}
-            style={{ alignSelf: "flex-start", background: "none", border: "1px solid #d1d5db", borderRadius: "0.375rem", padding: "0.375rem 0.75rem", fontSize: "0.875rem", color: "#6b7280", cursor: "pointer", marginBottom: "1rem" }}
-          >
-            ← Retour
-          </button>
-
-          <h1 className="join__title">🔴🟡 Puissance 4</h1>
-
-          {/* Pseudo reporté automatiquement */}
+          <button onClick={() => setJoined(false)} style={backBtnStyle}>← Retour</button>
+          <h1 className="join__title">🃏 Memory</h1>
           <p style={{ color: "#374151", marginBottom: "1.5rem", textAlign: "center" }}>
             Tu joues en tant que <strong>{pseudo}</strong>
           </p>
 
-          <button
-            className="join__btn"
-            style={{ marginBottom: "1.5rem" }}
-            onClick={() => setP4Room(generateCode())}
-          >
-            Créer une partie
+          {/* Solo */}
+          <button className="join__btn" style={{ marginBottom: "0.75rem" }}
+            onClick={() => setMemMode("solo")}>
+            🎮 Jouer en solo
           </button>
 
-          <div style={{ color: "#9ca3af", textAlign: "center", marginBottom: "1rem" }}>— ou —</div>
+          <div style={{ color: "#9ca3af", textAlign: "center", margin: "0.75rem 0" }}>— ou multijoueur —</div>
 
+          {/* Créer multi */}
+          <button className="join__btn" style={{ marginBottom: "1rem", background: "#0891b2" }}
+            onClick={() => { setMemMode("multi"); setMemRoom(generateCode()); }}>
+            Créer une partie multijoueur
+          </button>
+
+          {/* Rejoindre multi */}
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <input
-              className="join__input"
-              placeholder="Code de la partie"
+            <input className="join__input" placeholder="Code de la partie"
+              value={memCodeInput}
+              onChange={(e) => setMemCodeInput(e.target.value.toUpperCase())}
+              style={{ flex: 1, marginBottom: 0 }} />
+            <button className="join__btn" style={{ flexShrink: 0 }}
+              disabled={memCodeInput.length < 6}
+              onClick={() => { setMemMode("multi"); setMemRoom(memCodeInput.trim()); }}>
+              Rejoindre
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── PAGE : Lobby Puissance 4 ───────────────────────────────
+  if (room === "Puissance 4" && !p4Room) {
+    return (
+      <div className="join">
+        <div className="join__card">
+          <button onClick={() => setJoined(false)} style={backBtnStyle}>← Retour</button>
+          <h1 className="join__title">🔴🟡 Puissance 4</h1>
+          <p style={{ color: "#374151", marginBottom: "1.5rem", textAlign: "center" }}>
+            Tu joues en tant que <strong>{pseudo}</strong>
+          </p>
+          <button className="join__btn" style={{ marginBottom: "1.5rem" }}
+            onClick={() => setP4Room(generateCode())}>
+            Créer une partie
+          </button>
+          <div style={{ color: "#9ca3af", textAlign: "center", marginBottom: "1rem" }}>— ou —</div>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <input className="join__input" placeholder="Code de la partie"
               value={p4CodeInput}
               onChange={(e) => setP4CodeInput(e.target.value.toUpperCase())}
-              style={{ flex: 1, marginBottom: 0 }}
-            />
-            <button
-              className="join__btn"
-              style={{ flexShrink: 0 }}
+              style={{ flex: 1, marginBottom: 0 }} />
+            <button className="join__btn" style={{ flexShrink: 0 }}
               disabled={p4CodeInput.length < 6}
-              onClick={() => setP4Room(p4CodeInput.trim())}
-            >
+              onClick={() => setP4Room(p4CodeInput.trim())}>
               Rejoindre
             </button>
           </div>
@@ -143,8 +166,26 @@ function App() {
 
   // ── Composant jeu ──────────────────────────────────────────
   let gameComponent = null;
+
   if (room === "Memory") {
-    gameComponent = <MemoryBoard />;
+    if (memMode === "solo") {
+      gameComponent = (
+        <MemoryBoard
+          pseudo={pseudo}
+          onBack={() => setMemMode(null)}
+        />
+      );
+    } else if (memMode === "multi" && memRoom) {
+      gameComponent = (
+        <MemoryBoard
+          pseudo={pseudo}
+          socket={socket}
+          room={memRoom}
+          multiplayer
+          onBack={() => { setMemMode(null); setMemRoom(null); }}
+        />
+      );
+    }
   } else if (room === "Puissance 4" && p4Room) {
     gameComponent = (
       <Puissance4Board
@@ -190,5 +231,18 @@ function App() {
   if (gameComponent) return <GamePage game={gameComponent}>{chatContent}</GamePage>;
   return chatContent;
 }
+
+// Style partagé pour les boutons retour
+const backBtnStyle = {
+  alignSelf: "flex-start",
+  background: "none",
+  border: "1px solid #d1d5db",
+  borderRadius: "0.375rem",
+  padding: "0.375rem 0.75rem",
+  fontSize: "0.875rem",
+  color: "#6b7280",
+  cursor: "pointer",
+  marginBottom: "1rem",
+};
 
 export default App;

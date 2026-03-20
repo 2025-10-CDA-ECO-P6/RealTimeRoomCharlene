@@ -132,3 +132,72 @@
     }
   }
 }
+
+// ── À AJOUTER À LA FIN DE memoryBoard.scss ──────────────────
+
+.memory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.memory-back-btn {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 200ms;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+}
+
+.memory-room-code {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-family: monospace;
+  background: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.memory-turn--mine {
+  color: #0891b2;
+  font-weight: 700;
+}
+
+.memory-turn--other {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.memory-scores {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.memory-score {
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+
+  &--me {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  &--opp {
+    background: #fef9c3;
+    color: #854d0e;
+  }
+}
