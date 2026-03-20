@@ -8,7 +8,6 @@ const socket = io("https://chat-api-eepo.onrender.com", {
   transports: ["websocket"],
 });
 
-// Génère un code à 6 caractères
 function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
@@ -21,10 +20,8 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [userTyping, setUserTyping] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-
-  // État mini-lobby Puissance 4
-  const [p4Room, setP4Room] = useState(null);       // room unique une fois choisie
-  const [p4CodeInput, setP4CodeInput] = useState(""); // code saisi pour rejoindre
+  const [p4Room, setP4Room] = useState(null);
+  const [p4CodeInput, setP4CodeInput] = useState("");
 
   const messagesEndRef = useRef(null);
   const typingTimeout = useRef(null);
@@ -34,7 +31,6 @@ function App() {
     socket.on("system", (text) => setMessages((prev) => [...prev, { pseudo: "SYSTEM", content: text }]));
     socket.on("typing", ({ pseudo }) => setUserTyping(pseudo));
     socket.on("stopTyping", () => setUserTyping(null));
-
     return () => {
       socket.off("message");
       socket.off("system");
@@ -49,10 +45,7 @@ function App() {
 
   const handleJoin = (e) => {
     e.preventDefault();
-    if (!pseudo.trim()) {
-      setErrorMessage("Un pseudo est requis.");
-      return;
-    }
+    if (!pseudo.trim()) { setErrorMessage("Un pseudo est requis."); return; }
     if (!room) return;
     setErrorMessage("");
     socket.emit("join", { room, pseudo });
@@ -101,9 +94,7 @@ function App() {
                 </button>
               ))}
             </div>
-            <button className="join__btn" type="submit" disabled={!room}>
-              Entrer
-            </button>
+            <button className="join__btn" type="submit" disabled={!room}>Entrer</button>
           </form>
         </div>
       </div>
@@ -119,8 +110,6 @@ function App() {
           <p style={{ color: "#6b7280", marginBottom: "1.5rem", textAlign: "center" }}>
             Crée une partie ou rejoins celle d'un ami.
           </p>
-
-          {/* Créer */}
           <button
             className="join__btn"
             style={{ marginBottom: "1.5rem" }}
@@ -128,14 +117,11 @@ function App() {
           >
             Créer une partie
           </button>
-
           <div style={{ color: "#9ca3af", textAlign: "center", marginBottom: "1rem" }}>— ou —</div>
-
-          {/* Rejoindre */}
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
               className="join__input"
-              placeholder="Code de la partie (ex: A1B2C3)"
+              placeholder="Code de la partie"
               value={p4CodeInput}
               onChange={(e) => setP4CodeInput(e.target.value.toUpperCase())}
               style={{ flex: 1, marginBottom: 0 }}
@@ -159,7 +145,14 @@ function App() {
   if (room === "Memory") {
     gameComponent = <MemoryBoard />;
   } else if (room === "Puissance 4" && p4Room) {
-    gameComponent = <Puissance4Board socket={socket} room={p4Room} pseudo={pseudo} />;
+    gameComponent = (
+      <Puissance4Board
+        socket={socket}
+        room={p4Room}
+        pseudo={pseudo}
+        onBack={() => setP4Room(null)}
+      />
+    );
   }
 
   // ── Chat ───────────────────────────────────────────────────
@@ -184,11 +177,9 @@ function App() {
             )}
             <div ref={messagesEndRef} />
           </div>
-
           {userTyping && userTyping !== pseudo && (
             <div className="chat__typing">{userTyping} écrit…</div>
           )}
-
           <form className="input-bar" onSubmit={handleSend}>
             <input
               className="input-bar__field"
