@@ -25,7 +25,7 @@ function saveScore(newScore) {
   return updated;
 }
 
-// ── HEADER COMMUN (même style que Puissance 4) ───────────────
+// ── HEADER COMMUN ────────────────────────────────────────────
 function MemoryHeader({ onBack, roomCode }) {
   return (
     <div className="memory-header">
@@ -33,8 +33,28 @@ function MemoryHeader({ onBack, roomCode }) {
       <h1 className="memory-title">Memory Game</h1>
       {roomCode
         ? <div className="memory-room-code">Code : <strong>{roomCode}</strong></div>
-        : <div style={{ width: "80px" }} /> /* spacer pour centrer le titre */
+        : <div className="memory-header__spacer" />
       }
+    </div>
+  );
+}
+
+// ── SCOREBOARD ───────────────────────────────────────────────
+function Scoreboard({ pseudo, opponent, myScore, oppScore, activePlayer, playerNum }) {
+  const meActive = activePlayer === playerNum;
+  const oppActive = !meActive;
+  return (
+    <div className="memory-scoreboard">
+      <div className={`memory-scoreboard__card${meActive ? " memory-scoreboard__card--active" : ""}`}>
+        <span className="memory-scoreboard__name">🧑 {pseudo}</span>
+        <span className="memory-scoreboard__score">{myScore}</span>
+        <span className="memory-scoreboard__label">paires</span>
+      </div>
+      <div className={`memory-scoreboard__card${oppActive ? " memory-scoreboard__card--active" : ""}`}>
+        <span className="memory-scoreboard__name">👤 {opponent || "?"}</span>
+        <span className="memory-scoreboard__score">{oppScore}</span>
+        <span className="memory-scoreboard__label">paires</span>
+      </div>
     </div>
   );
 }
@@ -95,13 +115,12 @@ function MemorySolo({ pseudo, onBack }) {
         if (isGameWon(checked)) {
           stopTimer();
           setWon(true);
-          const updated = saveScore({
+          setLeaderboard(saveScore({
             pseudo: pseudo || "Anonyme",
             moves: moves + 1,
             time,
             date: new Date().toLocaleDateString("fr-FR"),
-          });
-          setLeaderboard(updated);
+          }));
         }
       }, 800);
     } else {
@@ -113,7 +132,6 @@ function MemorySolo({ pseudo, onBack }) {
     <div className="memory-container">
       <MemoryHeader onBack={onBack} />
 
-      {/* Contrôles */}
       <div className="memory-controls">
         <div className="memory-stats">
           <span className="memory-stat">🎯 <strong>{moves}</strong> coups</span>
@@ -124,8 +142,7 @@ function MemorySolo({ pseudo, onBack }) {
 
       {won && (
         <div className="memory-victory">
-          🎉 Bravo <strong>{pseudo || "Anonyme"}</strong> !{" "}
-          {moves} coups en {formatTime(time)} !
+          🎉 Bravo <strong>{pseudo || "Anonyme"}</strong> ! {moves} coups en {formatTime(time)} !
         </div>
       )}
 
@@ -180,14 +197,9 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
     socket.on("mem-waiting", () => setWaiting(true));
 
     socket.on("mem-start", ({ board: b, playerNum: pNum, opponent: opp, currentPlayer: cp, scores: sc }) => {
-      setBoard(b);
-      setPlayerNum(pNum);
-      setOpponent(opp);
-      setCurrentPlayer(cp);
-      setScores(sc);
-      setWaiting(false);
-      setGameOver(null);
-      setLocked(false);
+      setBoard(b); setPlayerNum(pNum); setOpponent(opp);
+      setCurrentPlayer(cp); setScores(sc);
+      setWaiting(false); setGameOver(null); setLocked(false);
     });
 
     socket.on("mem-flip-ack", ({ cardId, symbol }) => {
@@ -198,9 +210,7 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
       setBoard((prev) => prev.map((c) =>
         c.id === cardId1 || c.id === cardId2 ? { ...c, isMatched: true } : c
       ));
-      setScores(sc);
-      setCurrentPlayer(cp);
-      setLocked(false);
+      setScores(sc); setCurrentPlayer(cp); setLocked(false);
     });
 
     socket.on("mem-no-match", ({ cardId1, cardId2, currentPlayer: cp }) => {
@@ -208,37 +218,25 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
         setBoard((prev) => prev.map((c) =>
           c.id === cardId1 || c.id === cardId2 ? { ...c, isFlipped: false, symbol: null } : c
         ));
-        setCurrentPlayer(cp);
-        setLocked(false);
+        setCurrentPlayer(cp); setLocked(false);
       }, 100);
     });
 
     socket.on("mem-game-over", ({ scores: sc, winner }) => {
-      setScores(sc);
-      setGameOver({ scores: sc, winner });
+      setScores(sc); setGameOver({ scores: sc, winner });
     });
 
     socket.on("mem-restart-ack", ({ board: b, playerNum: pNum, opponent: opp, currentPlayer: cp, scores: sc }) => {
-      setBoard(b);
-      setPlayerNum(pNum);
-      setOpponent(opp);
-      setCurrentPlayer(cp);
-      setScores(sc);
-      setGameOver(null);
-      setLocked(false);
+      setBoard(b); setPlayerNum(pNum); setOpponent(opp);
+      setCurrentPlayer(cp); setScores(sc);
+      setGameOver(null); setLocked(false);
     });
 
     socket.on("mem-opponent-left", () => setOpponentLeft(true));
 
     return () => {
-      socket.off("mem-waiting");
-      socket.off("mem-start");
-      socket.off("mem-flip-ack");
-      socket.off("mem-match");
-      socket.off("mem-no-match");
-      socket.off("mem-game-over");
-      socket.off("mem-restart-ack");
-      socket.off("mem-opponent-left");
+      ["mem-waiting","mem-start","mem-flip-ack","mem-match","mem-no-match",
+       "mem-game-over","mem-restart-ack","mem-opponent-left"].forEach((e) => socket.off(e));
     };
   }, [socket, room, pseudo]);
 
@@ -259,20 +257,17 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
     <div className="memory-container">
       <MemoryHeader onBack={onBack} roomCode={room} />
 
-      {/* Statut + scores */}
       <div className="memory-controls">
-        {/* Message de statut */}
+        {/* Statut */}
         <div className="memory-status">
           {opponentLeft ? (
             <span style={{ color: "#d97706" }}>⚠️ Adversaire déconnecté</span>
           ) : waiting ? (
             <span style={{ color: "#6b7280" }}>⏳ En attente d'un adversaire...</span>
           ) : gameOver ? (
-            <span style={{ fontWeight: "bold" }}>
-              {gameOver.winner === null
-                ? "🤝 Égalité !"
-                : gameOver.winner === playerNum
-                ? `🏆 ${pseudo}, tu as gagné !`
+            <span>
+              {gameOver.winner === null ? "🤝 Égalité !"
+                : gameOver.winner === playerNum ? `🏆 ${pseudo}, tu as gagné !`
                 : `😔 ${pseudo}, tu as perdu.`}
             </span>
           ) : (
@@ -282,20 +277,16 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
           )}
         </div>
 
-        {/* Scores — deux cartes côte à côte */}
+        {/* Scoreboard */}
         {playerNum && !waiting && (
-          <div className="memory-scoreboard">
-            <div className={`memory-scoreboard__card ${currentPlayer === playerNum ? "memory-scoreboard__card--active" : ""}`}>
-              <span className="memory-scoreboard__name">🧑 {pseudo}</span>
-              <span className="memory-scoreboard__score">{myScore}</span>
-              <span className="memory-scoreboard__label">paires</span>
-            </div>
-            <div className={`memory-scoreboard__card ${currentPlayer !== playerNum ? "memory-scoreboard__card--active" : ""}`}>
-              <span className="memory-scoreboard__name">👤 {opponent || "?"}</span>
-              <span className="memory-scoreboard__score">{oppScore}</span>
-              <span className="memory-scoreboard__label">paires</span>
-            </div>
-          </div>
+          <Scoreboard
+            pseudo={pseudo}
+            opponent={opponent}
+            myScore={myScore}
+            oppScore={oppScore}
+            activePlayer={currentPlayer}
+            playerNum={playerNum}
+          />
         )}
 
         {gameOver && (
@@ -305,7 +296,6 @@ function MemoryMulti({ socket, room, pseudo, onBack }) {
         )}
       </div>
 
-      {/* Plateau */}
       {board.length > 0 && (
         <div className="memory-board">
           {board.map((card) => (
